@@ -1,67 +1,65 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>言出法随 | Stage 2 失重回廊</title>
   <link rel="stylesheet" href="./stage2.css" />
 </head>
+
 <body>
   <main class="stage-shell">
     <canvas id="stageCanvas" aria-label="Stage 2 失重回廊" tabindex="0"></canvas>
 
     <section class="hud hud-left">
-      <div class="eyebrow">Stage 2 Zero Gravity Corridor</div>
+      <div class="eyebrow">Stage 2 Shadow Corridor</div>
       <h1>失重回廊</h1>
       <div class="status-grid">
         <div class="status-card objective-card">
           <small>当前目标</small>
-          <strong id="objectiveText">沿旋塔外缘依次通过光段与影段，在中立终台触碰「明」字。</strong>
+          <strong id="objectiveText">整张地图会被压暗，只能看清脚边两格。沿着回廊前进，继续用文字规则打开前路。</strong>
         </div>
         <div class="status-card hint-card">
           <small>场景提示</small>
-          <strong id="hintText">WASD / 方向键按屏幕方向移动；按 1【碎】、2【忆】、3【火】、4【冰】、F【影】、E【透】。</strong>
+          <strong id="hintText">WASD / 方向键按屏幕方向移动；视野只跟着小球走。按 1【碎】、2【忆】、3【火】、F 手电继续改写规则。</strong>
         </div>
       </div>
       <div class="ability-bar">
         <button class="ability-chip" id="shatterChip" type="button" aria-pressed="false">
           <span>1</span>
           <strong>碎</strong>
-          <small>击碎矮墙</small>
+          <small>破坏矮墙</small>
         </button>
         <button class="ability-chip" id="memoryChip" type="button" aria-pressed="false">
           <span>2</span>
           <strong>忆</strong>
-          <small>恢复透明地面</small>
+          <small>恢复空洞</small>
         </button>
         <button class="ability-chip" id="fireChip" type="button" aria-pressed="false">
           <span>3</span>
           <strong>火</strong>
           <small>烧掉冰面</small>
         </button>
-        <button class="ability-chip" id="freezeChip" type="button" aria-pressed="false">
-          <span>4</span>
-          <strong>冰</strong>
-          <small>冻结水面</small>
+        <button class="ability-chip" id="lightChip" type="button" aria-pressed="false">
+          <span>G</span>
+          <strong>光</strong>
+          <small>照亮全图两秒</small>
         </button>
         <button class="ability-chip" id="flashChip" type="button" aria-pressed="false">
           <span>F</span>
-          <strong>影</strong>
-          <small>照出阴影路径</small>
-        </button>
-        <button class="ability-chip" id="pierceChip" type="button" aria-pressed="false">
-          <span>E</span>
-          <strong>透</strong>
-          <small>照出临时通路</small>
+          <strong>手电</strong>
+          <small>制造阴影路径</small>
         </button>
       </div>
       <div class="meta-panel">
         <small>操作说明</small>
         <ul>
-          <li>移动：WASD / 方向键</li>
-          <li>本关沿用第一关的 2.5D 菱形地图形式</li>
-          <li>靠近机关后再用技能，阴影路和透路都只持续 4 秒</li>
-          <li>最终平台始终稳定，触碰中央「明」字即可通关</li>
+          <li>移动：WASD / 方向键，按屏幕方向走</li>
+          <li>地图整体压暗，只能稳定看清小球前后左右各两格</li>
+          <li>范围视野会跟着角色移动，其余区域几乎看不清</li>
+          <li>靠近目标即可继续使用第一关已有文字能力与 G【光】</li>
+          <li>新增积水失衡、微弱灯光与闪电致盲事件</li>
         </ul>
       </div>
     </section>
@@ -70,23 +68,24 @@
       <div class="meta-panel">
         <small>规则障碍</small>
         <ul>
-          <li>光段 / 影段：只在对应窗口或中线中立带内稳定</li>
-          <li>矮墙：靠近后用【碎】击碎</li>
-          <li>透明地面：靠近后用【忆】短暂恢复</li>
-          <li>冰面：靠近后用【火】烧掉</li>
-          <li>水面：透明蓝水面，必须先用【冰】冻结</li>
-          <li>高墙：按 F 照出阴影桥，按 E 照出临时通路</li>
+          <li>矮墙：低高度方块，可用【碎】破坏</li>
+          <li>高墙：无法直接通过，可被手电照射生成临时阴影路径</li>
+          <li>空洞：走入会掉落，可用【忆】恢复</li>
+          <li>冰面：踏上去会沿当前方向冲刺，可用【火】烧掉</li>
+          <li>积水：踩上去会短暂失去重心，被惯性带出一步</li>
+          <li>微弱灯光：靠近后获得局部安全感，并解锁 G【光】</li>
+          <li>闪电：会让画面瞬间泛白并短暂失明 1 秒</li>
+          <li>压暗视野：只能看清身边两格，越远越难辨认结构</li>
         </ul>
       </div>
       <div class="meta-panel">
         <small>进度记录</small>
         <ul id="progressList">
-          <li>矮墙已击碎：0 / 1</li>
-          <li>透明地面已恢复：0 / 1</li>
-          <li>冰面已烧掉：0 / 1</li>
-          <li>水面已冻结：0 / 1</li>
-          <li>阴影路径已触发：0 / 1</li>
-          <li>透壁路径已显现：0 / 1</li>
+          <li>积水失衡：未触发</li>
+          <li>微弱灯光：未找到</li>
+          <li>【光】技能：未解锁</li>
+          <li>闪电失明：未触发</li>
+          <li>阴影路径：未触发</li>
         </ul>
       </div>
       <div class="meta-panel">
@@ -109,35 +108,71 @@
     </section>
 
     <div class="toast" id="toast"></div>
-
-    <section class="start-modal dream-intro is-visible" id="startModal" aria-hidden="false">
-      <div class="dream-intro__noise"></div>
-      <div class="dream-intro__frame">
-        <div class="dream-intro__meta" id="introMeta">意识坠落中</div>
-        <div class="dream-intro__glyph is-shadow" id="introGlyph">影</div>
-        <div class="dream-intro__copy">
-          <p class="dream-intro__line dream-intro__line--primary" id="introLinePrimary">写下名字，然后坠入迟夜的意识世界。</p>
-          <p class="dream-intro__line dream-intro__line--secondary" id="introLineSecondary">这里的字不是描述。字本身，就是规则。</p>
+    <section class="start-modal is-visible" id="startModal" aria-hidden="false">
+      <div class="start-card">
+        <div class="intro-stage" id="introStage" data-scene="street">
+          <div class="intro-stage__sky"></div>
+          <div class="intro-stage__buildings intro-stage__buildings--back"></div>
+          <div class="intro-stage__buildings intro-stage__buildings--front"></div>
+          <div class="intro-stage__wire"></div>
+          <div class="intro-stage__lane"></div>
+          <div class="intro-stage__mist"></div>
+          <div class="intro-stage__rain"></div>
+          <div class="intro-stage__lamp" aria-hidden="true"></div>
+          <div class="intro-stage__player" aria-hidden="true"></div>
+          <div class="intro-stage__pulse" aria-hidden="true"></div>
         </div>
-        <div class="dream-intro__entry" id="introEntry">
-          <label class="player-label dream-intro__label" for="startNameInput">写下他的名字</label>
-          <input class="player-input start-input dream-intro__input" id="startNameInput" type="text" maxlength="16" placeholder="迟夜" />
-          <p class="start-error dream-intro__error" id="startError"></p>
-          <div class="dream-intro__actions">
-            <button class="modal-button dream-intro__button" id="startGameButton" type="button">坠入梦中</button>
+        <div class="dream-intro__step is-hidden" id="introStepCounter"></div>
+        <div class="dream-intro__meta is-hidden" id="introMeta"></div>
+        <div class="dream-intro__glyph" id="introGlyph" aria-hidden="true">光</div>
+        <div class="dream-intro__copy">
+          <p class="dream-intro__line dream-intro__line--primary" id="introLinePrimary">不是路灯，也不是太阳。只是某户人家阳台上，专门还为你留着一盏暖黄的小灯。</p>
+          <p class="dream-intro__line dream-intro__line--secondary" id="introLineSecondary">晚上总是很难看清路。有时候，甚至不知道前面还有没有路。</p>
+        </div>
+        <div class="start-entry-panel is-hidden" id="startEntryPanel">
+          <input class="player-input start-input" id="startNameInput" type="text" maxlength="16" placeholder="请输入玩家名" />
+          <div class="start-abilities">
+            <div class="start-ability">
+              <span>1</span>
+              <strong>碎</strong>
+              <small>破坏矮墙</small>
+            </div>
+            <div class="start-ability">
+              <span>2</span>
+              <strong>忆</strong>
+              <small>临时恢复空洞</small>
+            </div>
+            <div class="start-ability">
+              <span>3</span>
+              <strong>火</strong>
+              <small>烧融冰面</small>
+            </div>
+            <div class="start-ability">
+              <span>G</span>
+              <strong>光</strong>
+              <small>照亮全图两秒</small>
+            </div>
+            <div class="start-ability">
+              <span>F</span>
+              <strong>手电</strong>
+              <small>照出阴影路径</small>
+            </div>
+          </div>
+          <p class="start-error" id="startError"></p>
+          <div class="start-actions">
+            <button class="modal-button" id="startGameButton" type="button">进入回廊</button>
           </div>
         </div>
+        <div class="dream-intro__prompt" id="introPrompt">原来照亮回家路的，从来不是太阳。</div>
+        <div class="dream-intro__worldline" id="introWorldline">而是那些，愿意为你留着的灯。</div>
         <div class="dream-intro__actions dream-intro__actions--floating" id="introFloatingActions">
-          <button class="modal-button dream-intro__button" id="introActionButton" type="button" hidden>触碰「光」</button>
-          <button class="modal-button dream-intro__button dream-intro__button--ghost" id="introContinueButton" type="button" hidden>继续向前</button>
-          <button class="modal-button dream-intro__button dream-intro__button--ghost" id="introFinishButton" type="button" hidden>进入回廊</button>
+          <button class="modal-button dream-intro__button" id="introActionButton" type="button">踏进夜路</button>
+          <button class="modal-button dream-intro__button is-hidden" id="introContinueButton" type="button" hidden>继续向前</button>
+          <button class="modal-button dream-intro__button is-hidden" id="introFinishButton" type="button" hidden>准备进入回廊</button>
         </div>
-        <div class="dream-intro__prompt" id="introPrompt">按下“坠入梦中”，进入第二关前的意识梦境。</div>
-        <div class="dream-intro__worldline" id="introWorldline">迟夜患有严重夜盲症。夜晚里，光会失焦，黑暗会吞没方向。</div>
-        <button class="dream-intro__skip" id="introSkipButton" type="button">跳过演出</button>
+        <button class="dream-intro__skip" id="introSkipButton" type="button">跳到关卡入口</button>
       </div>
     </section>
-
     <section class="victory-modal" id="victoryModal" aria-hidden="true">
       <div class="victory-card">
         <small>Stage Clear</small>
@@ -148,7 +183,7 @@
           <li>暂无记录</li>
         </ol>
         <div class="modal-actions">
-          <button class="modal-button" id="nextStageButton" type="button">前往下一关</button>
+          <button class="modal-button" id="nextStageButton" type="button">再试一次</button>
           <button class="modal-button" id="homeButton" type="button">返回首页</button>
         </div>
       </div>
@@ -157,4 +192,5 @@
 
   <script src="./stage2.js"></script>
 </body>
+
 </html>

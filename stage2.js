@@ -14,14 +14,17 @@
   var introGlyph = document.getElementById("introGlyph");
   var introLinePrimary = document.getElementById("introLinePrimary");
   var introLineSecondary = document.getElementById("introLineSecondary");
-  var introEntry = document.getElementById("introEntry");
   var introPrompt = document.getElementById("introPrompt");
   var introWorldline = document.getElementById("introWorldline");
+  var introStage = document.getElementById("introStage");
+  var introStepCounter = document.getElementById("introStepCounter");
   var introActionButton = document.getElementById("introActionButton");
   var introContinueButton = document.getElementById("introContinueButton");
   var introFinishButton = document.getElementById("introFinishButton");
   var introSkipButton = document.getElementById("introSkipButton");
   var introFloatingActions = document.getElementById("introFloatingActions");
+  var startEntryIntro = document.getElementById("startEntryIntro");
+  var startEntryPanel = document.getElementById("startEntryPanel");
   var timerText = document.getElementById("timerText");
   var honorList = document.getElementById("honorList");
   var resetHonorButton = document.getElementById("resetHonorButton");
@@ -34,9 +37,8 @@
   var shatterChip = document.getElementById("shatterChip");
   var memoryChip = document.getElementById("memoryChip");
   var fireChip = document.getElementById("fireChip");
-  var freezeChip = document.getElementById("freezeChip");
+  var lightChip = document.getElementById("lightChip");
   var flashChip = document.getElementById("flashChip");
-  var pierceChip = document.getElementById("pierceChip");
 
   var DPR = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
   var TILE_W = 96;
@@ -50,14 +52,80 @@
   var world = createWorld();
   var floatingGlyphs = createGlyphs();
   var floatingMotes = createMotes();
-  var activeShadowTiles = new Map();
-  var activeRevealTiles = new Map();
+  var activeShadowTiles = new Set();
   var fireBursts = [];
   var toastTimer = 0;
   var LEADERBOARD_KEY = "yanling-stage2-honor-board";
   var PLAYER_NAME_KEY = "yanling-stage2-player-name";
   var HOME_FOCUS_STAGE_KEY = "yanling-home-focus-stage";
   var enteredFromHome = window.sessionStorage.getItem("yanling-stage-entry") === "home-stage-2";
+  var INTRO_STEPS = [
+    {
+      scene: "street",
+      button: "action",
+      buttonLabel: "踏进夜路",
+      meta: "",
+      glyph: "夜",
+      primary: "深夜的居民区刚下过雨，路面潮湿，远处只剩模糊的灯。",
+      secondary: "迟夜总是走得很慢。夜色会吃掉方向感，连熟悉的巷口也像陌生的地方。",
+      prompt: "",
+      worldline: ""
+    },
+    {
+      scene: "blur",
+      button: "continue",
+      buttonLabel: "继续向前",
+      meta: "",
+      glyph: "暗",
+      primary: "晚上总是很难看清路。有时候，甚至不知道前面还有没有路。",
+      secondary: "霓虹会化成散开的光斑，边界变得模糊，脚下每一步都要先试着确认。",
+      prompt: "再往前一点，去感受那种既熟悉又不安的失焦感。",
+      worldline: "夜盲症不是单纯的黑，而是空间在眼前慢慢失去轮廓。 "
+    },
+    {
+      scene: "narrow",
+      button: "continue",
+      buttonLabel: "再靠近一点",
+      meta: "",
+      glyph: "路",
+      primary: "很多时候，他只能先看清脚边很近的一小块地方。",
+      secondary: "远处不是完全消失，而是需要靠近、停顿、再靠近，才能慢慢把路认出来。",
+      prompt: "",
+      worldline: ""
+    },
+    {
+      scene: "lamp",
+      button: "continue",
+      buttonLabel: "看向那盏灯",
+      meta: "",
+      glyph: "光",
+      primary: "不是路灯，也不是太阳。只是某户人家阳台上，专门还为你留着一盏暖黄的小灯。",
+      secondary: "它不强，也不刺眼，却让迟夜第一次觉得，夜里原来也能有一条愿意被看见的路。",
+      prompt: "",
+      worldline: ""
+    },
+    {
+      scene: "corridor",
+      button: "finish",
+      buttonLabel: "来到入口",
+      meta: "",
+      glyph: "影",
+      primary: "沿着这点暖光继续向前，现实的夜路开始和文字构成的回廊慢慢重叠。",
+      secondary: "从这里开始，情景导入结束，真正的第二关才会展开。",
+      prompt: "",
+      worldline: ""
+    },
+    {
+      scene: "corridor",
+      button: "entry",
+      meta: "",
+      glyph: "影",
+      primary: "原来照亮回家路的，从来不是太阳。",
+      secondary: "而是那些，愿意为你留着的灯。",
+      prompt: "现在输入名字，再正式进入失重回廊。",
+      worldline: "从这一刻起，引导结束，关卡开始。"
+    }
+  ];
 
   var state = {
     lastTime: 0,
@@ -66,13 +134,20 @@
     victory: false,
     scoreSubmitted: false,
     shadowTriggered: 0,
-    revealTriggered: 0,
-    iceLessonLearned: true,
+    iceLessonLearned: false,
     alertHintUntil: 0,
     runStartedAt: 0,
     elapsed: 0,
     playerName: "",
-    intro: createIntroState(),
+    lightUnlocked: false,
+    lightUsed: false,
+    lightRevealUntil: 0,
+    lightningBlindUntil: 0,
+    puddleTriggered: false,
+    lightningTriggered: false,
+    intro: {
+      step: 0
+    },
     player: {
       x: world.start.x,
       y: world.start.y,
@@ -86,8 +161,6 @@
       facing: "right",
       moveDx: 1,
       moveDy: -1,
-      fromZ: 0,
-      toZ: 0,
       sliding: false,
       falling: false,
       fallT: 0,
@@ -96,136 +169,87 @@
   };
 
   function createWorld() {
-    var LAYER_TOP = 132;
-    var LAYER_MID = 76;
-    var LAYER_LOW = 20;
     var floors = new Map();
     var gaps = new Map();
     var lowWalls = new Map();
     var tallWalls = new Map();
     var iceTiles = new Map();
-    var waterTiles = new Map();
+    var puddles = new Map();
+    var lamps = new Map();
+    var lightningZones = new Map();
 
     addTiles(floors, [
-      [2, 22, "moss", LAYER_TOP],
-      [3, 21, "glass", LAYER_TOP],
-      [4, 20, "glass", LAYER_TOP],
-      [5, 19, "glass", LAYER_TOP],
-      [6, 18, "glass", LAYER_TOP],
-      [7, 17, "glass", LAYER_TOP],
-      [9, 15, "glass", LAYER_TOP],
-      [10, 14, "glass", LAYER_TOP],
-      [11, 13, "glass", LAYER_TOP],
-      [12, 12, "glass", LAYER_TOP],
-      [13, 11, "glass", LAYER_TOP],
-      [14, 10, "glass", LAYER_TOP],
-      [15, 9, "glass", LAYER_TOP],
-      [4, 22, "glass", LAYER_TOP],
-      [5, 21, "glass", LAYER_TOP],
-      [6, 20, "glass", LAYER_TOP],
-      [7, 19, "glass", LAYER_TOP],
-      [8, 18, "glass", LAYER_TOP],
-      [9, 17, "glass", LAYER_TOP],
-      [10, 16, "glass", LAYER_TOP],
-      [11, 15, "glass", LAYER_TOP],
-      [12, 14, "glass", LAYER_TOP],
-      [20, 9, "moss", LAYER_MID],
-      [21, 8, "glass", LAYER_MID],
-      [22, 7, "glass", LAYER_MID],
-      [24, 5, "glass", LAYER_MID],
-      [25, 4, "glass", LAYER_MID],
-      [26, 3, "glass", LAYER_MID],
-      [22, 9, "glass", LAYER_MID],
-      [23, 8, "glass", LAYER_MID],
-      [24, 7, "glass", LAYER_MID],
-      [25, 6, "glass", LAYER_MID],
-      [26, 5, "glass", LAYER_MID],
-      [24, 16, "moss", LAYER_LOW],
-      [25, 15, "glass", LAYER_LOW],
-      [26, 14, "glass", LAYER_LOW],
-      [27, 13, "glass", LAYER_LOW],
-      [28, 12, "glass", LAYER_LOW],
-      [30, 10, "glass", LAYER_LOW],
-      [31, 9, "glass", LAYER_LOW],
-      [24, 18, "glass", LAYER_LOW],
-      [25, 17, "glass", LAYER_LOW],
-      [26, 16, "glass", LAYER_LOW],
-      [27, 15, "glass", LAYER_LOW],
-      [28, 14, "glass", LAYER_LOW],
-      [34, 6, "altar", LAYER_LOW]
+      [1, 17, "wood"],
+      [2, 16, "wood"],
+      [2, 14, "moss"],
+      [3, 17, "wood"],
+      [3, 15, "wood"],
+      [3, 13, "wood"],
+      [4, 16, "wood"],
+      [4, 14, "moss"],
+      [4, 12, "wood"],
+      [5, 15, "wood"],
+      [5, 13, "wood"],
+      [5, 11, "moss"],
+      [6, 12, "wood"],
+      [6, 10, "wood"],
+      [7, 11, "wood"],
+      [7, 9, "wood"],
+      [8, 10, "wood"],
+      [8, 8, "moss"],
+      [9, 9, "wood"],
+      [9, 7, "moss"],
+      [10, 8, "wood"],
+      [10, 6, "wood"],
+      [11, 7, "wood"],
+      [11, 5, "wood"],
+      [12, 4, "wood"],
+      [13, 3, "wood"],
+      [14, 4, "moss"],
+      [15, 5, "wood"],
+      [16, 4, "wood"],
+      [19, 3, "wood"],
+      [20, 2, "wood"],
+      [21, 3, "altar"]
     ]);
 
-    addGap(gaps, 8, 16, true, LAYER_TOP);
-    addGap(gaps, 23, 6, true, LAYER_MID);
-    addGap(gaps, 29, 11, true, LAYER_LOW);
+    addGap(gaps, 9, 7, true);
+    addGap(gaps, 14, 4, true);
 
-    addLowWall(lowWalls, 6, 18, "lw-top", LAYER_TOP);
-    addLowWall(lowWalls, 25, 4, "lw-mid", LAYER_MID);
-    addLowWall(lowWalls, 30, 10, "lw-low", LAYER_LOW);
+    addLowWall(lowWalls, 6, 10, "lw1");
+    addLowWall(lowWalls, 10, 8, "lw2");
+    addLowWall(lowWalls, 15, 5, "lw3");
 
-    addIceTile(iceTiles, 10, 14, "ice-top-main", LAYER_TOP);
-    addIceTile(iceTiles, 11, 13, "ice-top-main", LAYER_TOP);
-    addIceTile(iceTiles, 10, 16, "ice-top-side", LAYER_TOP);
-    addIceTile(iceTiles, 11, 15, "ice-top-side", LAYER_TOP);
-    addIceTile(iceTiles, 24, 7, "ice-mid-side", LAYER_MID);
-    addIceTile(iceTiles, 25, 6, "ice-mid-side", LAYER_MID);
-    addIceTile(iceTiles, 25, 15, "ice-low-main", LAYER_LOW);
-    addIceTile(iceTiles, 26, 14, "ice-low-main", LAYER_LOW);
+    addIceTile(iceTiles, 11, 5, "ice1");
+    addIceTile(iceTiles, 12, 4, "ice1");
+    addIceTile(iceTiles, 13, 3, "ice1");
+    addIceTile(iceTiles, 20, 2, "ice2");
 
-    addWaterTile(waterTiles, 7, 19, "water-top-side", LAYER_TOP);
-    addWaterTile(waterTiles, 8, 18, "water-top-side", LAYER_TOP);
-    addWaterTile(waterTiles, 13, 11, "water-top-main", LAYER_TOP);
-    addWaterTile(waterTiles, 14, 10, "water-top-main", LAYER_TOP);
-    addWaterTile(waterTiles, 22, 9, "water-mid-side", LAYER_MID);
-    addWaterTile(waterTiles, 23, 8, "water-mid-side", LAYER_MID);
-    addWaterTile(waterTiles, 27, 13, "water-low-main", LAYER_LOW);
-    addWaterTile(waterTiles, 28, 12, "water-low-main", LAYER_LOW);
-    addWaterTile(waterTiles, 27, 15, "water-low-side", LAYER_LOW);
-    addWaterTile(waterTiles, 28, 14, "water-low-side", LAYER_LOW);
+    addPuddle(puddles, 4, 14, "puddle1");
+    addLamp(lamps, 7, 11, "lamp1");
+    addLightningZone(lightningZones, 12, 4, "lightning1");
 
-    addTallWall(tallWalls, 16, 10, "tw-drop-top", {
-      shadowTiles: [
-        { x: 16, y: 8, elevation: LAYER_TOP },
-        { x: 17, y: 7, elevation: LAYER_TOP },
-        { x: 18, y: 6, elevation: LAYER_TOP, descentTo: { x: 20, y: 9, elevation: LAYER_MID, label: "第二层" } }
-      ],
+    addTallWall(tallWalls, 8, 10, "tw0", null);
+    addTallWall(tallWalls, 12, 8, "tw1", null);
+    addTallWall(tallWalls, 17, 5, "tw2", {
+      shadowTiles: [{ x: 17, y: 3 }, { x: 18, y: 4 }, { x: 19, y: 3 }],
       duration: 4
-    }, null, LAYER_TOP);
-    addTallWall(tallWalls, 27, 4, "tw-drop-mid", {
-      shadowTiles: [
-        { x: 27, y: 2, elevation: LAYER_MID },
-        { x: 28, y: 1, elevation: LAYER_MID, descentTo: { x: 24, y: 16, elevation: LAYER_LOW, label: "第三层" } }
-      ],
-      duration: 4
-    }, null, LAYER_MID);
-    addTallWall(tallWalls, 32, 10, "tw-reveal-low", null, {
-      revealTiles: [
-        { x: 32, y: 8, elevation: LAYER_LOW },
-        { x: 33, y: 7, elevation: LAYER_LOW }
-      ],
-      duration: 4
-    }, LAYER_LOW);
+    });
 
     return {
-      width: 36,
-      height: 26,
+      width: 26,
+      height: 20,
       floors: floors,
       gaps: gaps,
       lowWalls: lowWalls,
       tallWalls: tallWalls,
       iceTiles: iceTiles,
-      waterTiles: waterTiles,
-      iceGroupCount: 4,
-      waterGroupCount: 5,
-      shadowCount: 2,
-      revealCount: 1,
-      layers: {
-        top: LAYER_TOP,
-        middle: LAYER_MID,
-        low: LAYER_LOW
-      },
-      start: { x: 2, y: 22 },
-      goal: { x: 34, y: 6 }
+      puddles: puddles,
+      lamps: lamps,
+      lightningZones: lightningZones,
+      iceGroupCount: 2,
+      start: { x: 2, y: 16 },
+      goal: { x: 21, y: 3 }
     };
   }
 
@@ -235,73 +259,82 @@
         x: entry[0],
         y: entry[1],
         type: entry[2],
-        elevation: typeof entry[3] === "number" ? entry[3] : (entry[2] === "altar" ? 10 : 0)
+        elevation: entry[2] === "altar" ? 10 : 0
       });
     });
   }
 
-  function addGap(store, x, y, recoverable, elevation) {
+  function addGap(store, x, y, recoverable) {
     store.set(tileKey(x, y), {
       x: x,
       y: y,
       recoverable: recoverable,
       restored: false,
-      restoreUntil: 0,
-      elevation: elevation || 0
+      restoreUntil: 0
     });
   }
 
-  function addLowWall(store, x, y, id, elevation) {
+  function addLowWall(store, x, y, id) {
     store.set(tileKey(x, y), {
       id: id,
       x: x,
       y: y,
-      broken: false,
-      elevation: elevation || 0
+      broken: false
     });
   }
 
-  function addTallWall(store, x, y, id, shadow, reveal, elevation) {
+  function addTallWall(store, x, y, id, shadow) {
     store.set(tileKey(x, y), {
       id: id,
       x: x,
       y: y,
       shadow: shadow,
-      shadowUntil: 0,
-      shadowUsed: false,
-      reveal: reveal || null,
-      revealUntil: 0,
-      revealUsed: false,
-      elevation: elevation || 0
+      shadowUntil: 0
     });
   }
 
-  function addIceTile(store, x, y, group, elevation) {
+  function addIceTile(store, x, y, group) {
     store.set(tileKey(x, y), {
       x: x,
       y: y,
       group: group,
-      melted: false,
-      elevation: elevation || 0
+      melted: false
     });
   }
 
-  function addWaterTile(store, x, y, group, elevation) {
+  function addPuddle(store, x, y, id) {
     store.set(tileKey(x, y), {
+      id: id,
       x: x,
       y: y,
-      group: group,
-      frozen: false,
-      elevation: elevation || 0
+      triggered: false
+    });
+  }
+
+  function addLamp(store, x, y, id) {
+    store.set(tileKey(x, y), {
+      id: id,
+      x: x,
+      y: y,
+      found: false
+    });
+  }
+
+  function addLightningZone(store, x, y, id) {
+    store.set(tileKey(x, y), {
+      id: id,
+      x: x,
+      y: y,
+      triggered: false
     });
   }
 
   function createGlyphs() {
     return [
-      { text: "影", x: 0.14, y: 0.2, tone: "rgba(177, 208, 255, 0.22)", size: 88, speed: 0.24 },
-      { text: "透", x: 0.82, y: 0.22, tone: "rgba(187, 245, 198, 0.18)", size: 74, speed: 0.18 },
-      { text: "冰", x: 0.72, y: 0.74, tone: "rgba(152, 228, 255, 0.16)", size: 86, speed: 0.22 },
-      { text: "明", x: 0.18, y: 0.78, tone: "rgba(244, 232, 178, 0.16)", size: 68, speed: 0.2 }
+      { text: "轻", x: 0.14, y: 0.2, tone: "rgba(177, 208, 255, 0.22)", size: 88, speed: 0.24 },
+      { text: "风", x: 0.82, y: 0.22, tone: "rgba(187, 245, 198, 0.18)", size: 74, speed: 0.18 },
+      { text: "裂", x: 0.72, y: 0.74, tone: "rgba(255, 188, 146, 0.14)", size: 86, speed: 0.22 },
+      { text: "生", x: 0.18, y: 0.78, tone: "rgba(207, 247, 211, 0.2)", size: 68, speed: 0.2 }
     ];
   }
 
@@ -317,125 +350,6 @@
       });
     }
     return motes;
-  }
-
-  function createIntroState() {
-    return {
-      active: true,
-      phase: "entry",
-      phaseStartedAt: 0,
-      nameLocked: false,
-      rewriteFlashUntil: 0
-    };
-  }
-
-  function setIntroActive(active) {
-    state.intro.active = active;
-    document.body.classList.toggle("intro-active", active);
-    if (!active) {
-      startModal.classList.remove("is-visible");
-      startModal.setAttribute("aria-hidden", "true");
-      return;
-    }
-    startModal.classList.add("is-visible");
-    startModal.setAttribute("aria-hidden", "false");
-  }
-
-  function setIntroPhase(phase) {
-    state.intro.phase = phase;
-    state.intro.phaseStartedAt = state.lastTime;
-    updateIntroDom();
-  }
-
-  function updateIntroDom() {
-    var phase = state.intro.phase;
-    var showEntry = phase === "entry";
-    var showAction = phase === "light-touch";
-    var showContinue = phase === "street" || phase === "shadow-sense";
-    var showFinish = phase === "tower-reveal";
-
-    introEntry.classList.toggle("is-hidden", !showEntry);
-    introEntry.hidden = !showEntry;
-    introActionButton.hidden = !showAction;
-    introContinueButton.hidden = !showContinue;
-    introFinishButton.hidden = !showFinish;
-    introFloatingActions.classList.toggle("is-hidden", !(showAction || showContinue || showFinish));
-
-    if (phase === "entry") {
-      introMeta.textContent = "意识坠落中";
-      introGlyph.textContent = "影";
-      introGlyph.className = "dream-intro__glyph is-shadow";
-      introLinePrimary.textContent = "写下名字，然后坠入迟夜的意识世界。";
-      introLineSecondary.textContent = "这里的字不是描述。字本身，就是规则。";
-      introPrompt.textContent = "按下“坠入梦中”，进入第二关前的引导式梦境。";
-      introWorldline.textContent = "迟夜患有严重夜盲症。夜晚里，光会失焦，黑暗会吞没方向。";
-      return;
-    }
-
-    if (phase === "falling") {
-      introMeta.textContent = "世界失重";
-      introGlyph.textContent = "影";
-      introGlyph.className = "dream-intro__glyph is-shadow";
-      introLinePrimary.textContent = "整个世界开始缓慢下坠。";
-      introLineSecondary.textContent = "岛屿、光点与汉字被拉成长线，像意识正在失去重量。";
-      introPrompt.textContent = "空间正在坠入迟夜的梦中。";
-      introWorldline.textContent = "这不是剧情提示。你正在被带入一个由汉字规则构成的意识世界。";
-      return;
-    }
-
-    if (phase === "street") {
-      introMeta.textContent = "现实 / 深夜街道";
-      introGlyph.textContent = "夜";
-      introGlyph.className = "dream-intro__glyph";
-      introLinePrimary.textContent = "他总是看不清夜晚。";
-      introLineSecondary.textContent = "霓虹拖成光斑，边界被黑暗吞没。继续向前，陪迟夜走进失焦的街道。";
-      introPrompt.textContent = "按方向键或点击“继续向前”。";
-      introWorldline.textContent = "他曾以为：看不见的人，本就不该前进。";
-      return;
-    }
-
-    if (phase === "light-touch") {
-      introMeta.textContent = "规则初次显形";
-      introGlyph.textContent = "光";
-      introGlyph.className = "dream-intro__glyph is-light";
-      introLinePrimary.textContent = "地面缓慢浮现了「光」。";
-      introLineSecondary.textContent = "靠近它。不是为了照亮，而是为了改写世界的结构。";
-      introPrompt.textContent = "点击“触碰「光」”，重写一次世界规则。";
-      introWorldline.textContent = "在这里，文字不描述世界。文字本身，就是世界。";
-      return;
-    }
-
-    if (phase === "light-rewrite") {
-      introMeta.textContent = "规则被改写";
-      introGlyph.textContent = "光";
-      introGlyph.className = "dream-intro__glyph is-light";
-      introLinePrimary.textContent = "隐藏的结构被重新定义。";
-      introLineSecondary.textContent = "平台从黑暗里浮现，轮廓被光重新书写。迟夜第一次意识到，自己能触碰规则。";
-      introPrompt.textContent = "世界正在被重构。";
-      introWorldline.textContent = "字不是解释。字就是命令。";
-      return;
-    }
-
-    if (phase === "shadow-sense") {
-      introMeta.textContent = "影 / 感知仍在";
-      introGlyph.textContent = "影";
-      introGlyph.className = "dream-intro__glyph is-shadow";
-      introLinePrimary.textContent = "原来不是所有东西，都需要被照亮。";
-      introLineSecondary.textContent = "继续向前。就算光熄灭，阴影里依然藏着边缘、回声与结构。";
-      introPrompt.textContent = "按方向键或点击“继续向前”，进入影的理解。";
-      introWorldline.textContent = "黑暗并非空无。它只是另一种感知的开始。";
-      return;
-    }
-
-    if (phase === "tower-reveal") {
-      introMeta.textContent = "失重回廊";
-      introGlyph.textContent = "明";
-      introGlyph.className = "dream-intro__glyph is-tower";
-      introLinePrimary.textContent = "也许黑暗从来不是敌人。";
-      introLineSecondary.textContent = "镜头升起。迟夜终于看见那座漂浮于光与影之间的遗迹塔，也看见自己能够改写它。";
-      introPrompt.textContent = "点击“进入回廊”，正式开始第二关。";
-      introWorldline.textContent = "光、影、忆、碎在塔外缓慢旋转。规则开始流动，你也将获得控制权。";
-    }
   }
 
   function getPlayerName() {
@@ -461,6 +375,81 @@
 
   function updateTimerDisplay() {
     timerText.textContent = formatTime(state.elapsed);
+  }
+
+  function syncIntroCopy(copy) {
+    if (!copy) {
+      return;
+    }
+    if (introGlyph && copy.glyph) {
+      introGlyph.textContent = copy.glyph;
+    }
+    if (introLinePrimary && copy.primary) {
+      introLinePrimary.textContent = copy.primary;
+    }
+    if (introLineSecondary && copy.secondary) {
+      introLineSecondary.textContent = copy.secondary;
+    }
+    if (introPrompt) {
+      introPrompt.textContent = Object.prototype.hasOwnProperty.call(copy, "prompt") ? copy.prompt : "";
+      introPrompt.classList.toggle("is-hidden", !copy.prompt);
+    }
+    if (introWorldline) {
+      introWorldline.textContent = Object.prototype.hasOwnProperty.call(copy, "worldline") ? copy.worldline : "";
+      introWorldline.classList.toggle("is-hidden", !copy.worldline);
+    }
+  }
+
+  function setNodeHidden(node, hidden) {
+    if (!node) {
+      return;
+    }
+    node.hidden = hidden;
+    node.classList.toggle("is-hidden", hidden);
+  }
+
+  function renderIntroStep() {
+    var step = INTRO_STEPS[state.intro.step];
+    if (!step) {
+      return;
+    }
+
+    syncIntroCopy(step);
+    if (introStage) {
+      introStage.setAttribute("data-scene", step.scene);
+    }
+
+    setNodeHidden(introFloatingActions, step.button === "entry");
+    setNodeHidden(introActionButton, step.button !== "action");
+    setNodeHidden(introContinueButton, step.button !== "continue");
+    setNodeHidden(introFinishButton, step.button !== "finish");
+    setNodeHidden(introSkipButton, step.button === "entry");
+    setNodeHidden(startEntryIntro, step.button !== "entry");
+    setNodeHidden(startEntryPanel, step.button !== "entry");
+
+    if (step.button === "action") {
+      introActionButton.textContent = step.buttonLabel;
+    } else if (step.button === "continue") {
+      introContinueButton.textContent = step.buttonLabel;
+    } else if (step.button === "finish") {
+      introFinishButton.textContent = step.buttonLabel;
+    }
+
+    if (step.button === "entry") {
+      startNameInput.focus();
+    }
+  }
+
+  function advanceIntroStep() {
+    if (state.intro.step < INTRO_STEPS.length - 1) {
+      state.intro.step += 1;
+      renderIntroStep();
+    }
+  }
+
+  function skipIntro() {
+    state.intro.step = INTRO_STEPS.length - 1;
+    renderIntroStep();
   }
 
   function loadLeaderboard() {
@@ -557,11 +546,14 @@
   }
 
   function goNextStage() {
-    window.sessionStorage.setItem(HOME_FOCUS_STAGE_KEY, "2");
-    window.location.href = "./index.html";
+    window.location.reload();
   }
 
   function beginStage() {
+    if (state.intro.step !== INTRO_STEPS.length - 1) {
+      advanceIntroStep();
+      return;
+    }
     var name = (startNameInput.value || "").trim();
     if (!name) {
       startError.textContent = "请先输入玩家名，再开始游戏。";
@@ -571,83 +563,24 @@
 
     startError.textContent = "";
     syncPlayerName(name);
-    playerNameInput.readOnly = true;
-    state.intro.nameLocked = true;
-    setIntroPhase("falling");
-  }
-
-  function finishIntroAndStartStage() {
-    setIntroActive(false);
     state.started = true;
     state.runStartedAt = 0;
     state.elapsed = 0;
+    startModal.classList.remove("is-visible");
+    startModal.setAttribute("aria-hidden", "true");
+    playerNameInput.readOnly = true;
     canvas.focus();
 
     if (enteredFromHome) {
-      setToast("迟夜已坠入意识回廊。方向键前进；按 1【碎】、2【忆】、3【火】、4【冰】、F【影】、E【透】。");
+      setToast("你已从首页进入 Stage 2。先适应脚边两格视野，再留意积水、微灯、闪电与新增的 G【光】。");
       window.sessionStorage.removeItem("yanling-stage-entry");
       enteredFromHome = false;
     } else {
-      setToast("梦境边界已经打开。方向键前进；按 1【碎】、2【忆】、3【火】、4【冰】、F【影】、E【透】。");
+      setToast("第二关开始。地图只会照亮小球周围两格，继续用 1【碎】、2【忆】、3【火】、G【光】、F 手电推进。");
     }
 
     refreshContextHint();
     updateObjective();
-  }
-
-  function advanceIntroByMove() {
-    if (state.intro.phase === "street") {
-      setIntroPhase("light-touch");
-      return true;
-    }
-    if (state.intro.phase === "shadow-sense") {
-      setIntroPhase("tower-reveal");
-      return true;
-    }
-    return false;
-  }
-
-  function triggerIntroLightTouch() {
-    if (state.intro.phase !== "light-touch") {
-      return;
-    }
-    state.intro.rewriteFlashUntil = state.lastTime + 1.2;
-    setIntroPhase("light-rewrite");
-  }
-
-  function skipIntro() {
-    var name = (startNameInput.value || "").trim();
-    if (!state.intro.nameLocked) {
-      if (!name) {
-        startError.textContent = "至少留下一个名字，再进入回廊。";
-        startNameInput.focus();
-        return;
-      }
-      startError.textContent = "";
-      syncPlayerName(name);
-      state.intro.nameLocked = true;
-    }
-    finishIntroAndStartStage();
-  }
-
-  function updateIntro(now) {
-    if (!state.intro.active) {
-      return;
-    }
-
-    if (!state.intro.phaseStartedAt) {
-      state.intro.phaseStartedAt = now;
-      updateIntroDom();
-    }
-
-    var elapsed = now - state.intro.phaseStartedAt;
-    if (state.intro.phase === "falling" && elapsed > 3.8) {
-      setIntroPhase("street");
-      return;
-    }
-    if (state.intro.phase === "light-rewrite" && elapsed > 2.8) {
-      setIntroPhase("shadow-sense");
-    }
   }
 
   function spawnFireBurst(centerX, centerY) {
@@ -698,7 +631,44 @@
     var targetX = width * 0.5;
     var targetY = height * 0.58;
     originX = targetX - (focus.x - focus.y) * TILE_W * 0.5;
-    originY = targetY - (focus.x + focus.y) * TILE_H * 0.5 + 26 + (focus.z || 0);
+    originY = targetY - (focus.x + focus.y) * TILE_H * 0.5 + 26;
+  }
+
+  function getTileVisibility(x, y) {
+    if (!state.started) {
+      return 1;
+    }
+    if (state.lightRevealUntil > state.lastTime) {
+      return 1;
+    }
+    var focus = getPlayerInterpolatedPosition();
+    var distance = Math.abs(x - focus.x) + Math.abs(y - focus.y);
+    var lampVisibility = getLampVisibilityBoost(x, y, focus.x, focus.y);
+    if (distance <= 2.05) {
+      return Math.max(1, lampVisibility);
+    }
+    return lampVisibility;
+  }
+
+  function isTileHidden(alpha) {
+    return alpha <= 0;
+  }
+
+  function getLampVisibilityBoost(x, y, playerX, playerY) {
+    var best = 0;
+    world.lamps.forEach(function (lamp) {
+      var playerDistance = Math.abs(playerX - lamp.x) + Math.abs(playerY - lamp.y);
+      if (playerDistance > 2.4) {
+        return;
+      }
+      var tileDistance = Math.abs(x - lamp.x) + Math.abs(y - lamp.y);
+      if (tileDistance <= 1.5) {
+        best = Math.max(best, 1);
+      } else if (tileDistance <= 2.4) {
+        best = Math.max(best, 0.38);
+      }
+    });
+    return best;
   }
 
   function setToast(message) {
@@ -720,14 +690,13 @@
 
   function updateObjective() {
     if (!state.started) {
-      objectiveText.textContent = "先输入名字并点击开始，进入第二关的失重回廊。";
+      objectiveText.textContent = "先输入名字并点击开始。第二关会沿袭第一关的地图与技能，但整张地图只会照亮你身边两格。";
       progressList.innerHTML = [
-        "<li>矮墙已击碎：0 / " + world.lowWalls.size + "</li>",
-        "<li>透明地面已恢复：0 / " + countRecoverableGaps() + "</li>",
-        "<li>冰面已烧掉：0 / " + world.iceGroupCount + "</li>",
-        "<li>水面已冻结：0 / " + world.waterGroupCount + "</li>",
-        "<li>阴影路径已触发：0 / 1</li>",
-        "<li>透壁路径已显现：0 / 1</li>"
+        "<li>积水失衡：未触发</li>",
+        "<li>微弱灯光：未找到</li>",
+        "<li>【光】技能：未解锁</li>",
+        "<li>闪电失明：未触发</li>",
+        "<li>阴影路径：未触发</li>"
       ].join("");
       return;
     }
@@ -735,49 +704,46 @@
     var broken = countBrokenWalls();
     var restored = countRestoredGaps();
     var melted = countMeltedIceGroups();
-    var frozen = countFrozenWaterGroups();
-    var shadowSolved = countActivatedShadowWalls();
-    var revealSolved = countActivatedRevealWalls();
+    var foundLamp = countFoundLamps();
 
-    if (!world.lowWalls.get(tileKey(6, 18)).broken) {
-      objectiveText.textContent = "光段A。先在顶层入口击碎矮墙，打开第一条上层主路。";
-    } else if (!world.gaps.get(tileKey(8, 16)).restored) {
-      objectiveText.textContent = "影段B。前方是影之缺口，靠近后按 2【忆】补路，4 秒内通过。";
-    } else if (!world.iceTiles.get(tileKey(10, 14)).melted) {
-      objectiveText.textContent = "光段B。前方浅蓝冰面会把你甩出去，先用 3【火】烧掉主路冰面。";
-    } else if (!world.waterTiles.get(tileKey(13, 11)).frozen) {
-      objectiveText.textContent = "顶层回廊的水面增多了。先冻住深蓝水面，再前往第一处下照机关。";
-    } else if (shadowSolved < 1) {
-      objectiveText.textContent = "顶层尽头高墙会把光往下切开。靠近后按 F【影】，显出下跳路线进入第二层。";
-    } else if (!world.gaps.get(tileKey(23, 6)).restored) {
-      objectiveText.textContent = "第二层进入影段B。先用【忆】恢复缺口，再往前推进。";
-    } else if (!world.lowWalls.get(tileKey(25, 4)).broken) {
-      objectiveText.textContent = "第二层光段C被矮墙截断。按 1【碎】破墙，继续找第二次落层机会。";
-    } else if (shadowSolved < 2) {
-      objectiveText.textContent = "第二层尽头还有一次下照落层。靠近高墙按 F【影】，跳入第三层。";
-    } else if (!world.iceTiles.get(tileKey(25, 15)).melted) {
-      objectiveText.textContent = "第三层开始就是高密度浅蓝冰面，先用 3【火】清出稳定主路。";
-    } else if (!world.waterTiles.get(tileKey(27, 13)).frozen) {
-      objectiveText.textContent = "第三层主路被深蓝水面截断。先用 4【冰】冻结后再向前推进。";
-    } else if (!world.gaps.get(tileKey(29, 11)).restored) {
-      objectiveText.textContent = "光段D。终点前还有最后一处缺口，需要再用一次【忆】。";
-    } else if (!world.lowWalls.get(tileKey(30, 10)).broken) {
-      objectiveText.textContent = "影段D 的矮墙挡住了最终平台前的主路，再用一次【碎】。";
-    } else if (revealSolved < 1) {
-      objectiveText.textContent = "最后一面高墙后藏着终点路。靠近后按 E【透】，照出 4 秒通路。";
+    if (!state.puddleTriggered) {
+      objectiveText.textContent = "先经过前方那滩积水。它会让你第一次失去重心，被惯性带出一步。";
+    } else if (!state.lightUnlocked) {
+      objectiveText.textContent = "前方有一盏微弱暖灯。靠近它，先获得一次局部安全感。";
+    } else if (!state.lightUsed) {
+      objectiveText.textContent = "【光】已经解锁。先按 G 短暂看清全图 2 秒，记住后面的路和障碍。";
+    } else if (!world.lowWalls.get(tileKey(6, 10)).broken) {
+      objectiveText.textContent = "先贴近第一面矮墙，在近距离视野里确认位置后按 1【碎】打开主路。";
+    } else if (!world.gaps.get(tileKey(9, 7)).restored) {
+      objectiveText.textContent = "第一处空洞就在黑里，靠近后按 2【忆】短暂补路，抓住 3 秒窗口穿过去。";
+    } else if (!world.lowWalls.get(tileKey(10, 8)).broken) {
+      objectiveText.textContent = "第二面矮墙藏在回廊拐点里，继续靠近后按 1【碎】破坏它。";
+    } else if (!state.iceLessonLearned && melted < 1) {
+      objectiveText.textContent = "前面是第一组冰面。先踩上去体会它会沿当前方向冲刺，再决定怎么处理。";
+    } else if (melted < 1) {
+      objectiveText.textContent = "看清冰面的轮廓后，靠近按 3【火】烧融它，稳定穿过这段暗路。";
+    } else if (!state.lightningTriggered) {
+      objectiveText.textContent = "继续前进。前面那段回廊会触发闪电，你会短暂失明 1 秒。";
+    } else if (!world.gaps.get(tileKey(14, 4)).restored) {
+      objectiveText.textContent = "第二处大空洞会截断回廊，再次使用 2【忆】补出临时落脚点。";
+    } else if (!world.lowWalls.get(tileKey(15, 5)).broken) {
+      objectiveText.textContent = "出口前还有最后一面矮墙，在看清边缘后按 1【碎】破开。";
+    } else if (state.shadowTriggered < 1) {
+      objectiveText.textContent = "高墙切断了最后的回廊。靠近后按 F，用手电照出 4 秒阴影路径。";
+    } else if (melted < 2) {
+      objectiveText.textContent = "终点前还有最后一组冰面。先用 3【火】烧掉它，再走上终点祭坛。";
     } else if (!state.victory) {
-      objectiveText.textContent = "最终平台已经稳定，走上中央「明」字完成第二关。";
+      objectiveText.textContent = "终点已经可达。沿着最后一段被看清的路，完成 Stage 2。";
     } else {
-      objectiveText.textContent = "Stage 2 完成。你已经掌握了光影、水面与临时通路的规则。";
+      objectiveText.textContent = "Stage 2 完成。你已经学会在有限视野里继续使用文字规则。";
     }
 
     progressList.innerHTML = [
-      "<li>矮墙已击碎：" + broken + " / " + world.lowWalls.size + "</li>",
-      "<li>透明地面已恢复：" + restored + " / " + countRecoverableGaps() + "</li>",
-      "<li>冰面已烧掉：" + melted + " / " + world.iceGroupCount + "</li>",
-      "<li>水面已冻结：" + frozen + " / " + world.waterGroupCount + "</li>",
-      "<li>下照路线已触发：" + shadowSolved + " / " + world.shadowCount + "</li>",
-      "<li>透壁路径已显现：" + revealSolved + " / " + world.revealCount + "</li>"
+      "<li>积水失衡：" + (state.puddleTriggered ? "已触发" : "未触发") + "</li>",
+      "<li>微弱灯光：" + (foundLamp ? "已找到" : "未找到") + "</li>",
+      "<li>【光】技能：" + (state.lightUnlocked ? "已解锁" : "未解锁") + "</li>",
+      "<li>闪电失明：" + (state.lightningTriggered ? "已触发" : "未触发") + "</li>",
+      "<li>阴影路径：" + state.shadowTriggered + " / 1</li>"
     ].join("");
   }
 
@@ -811,6 +777,16 @@
     return count;
   }
 
+  function countFoundLamps() {
+    var count = 0;
+    world.lamps.forEach(function (lamp) {
+      if (lamp.found) {
+        count += 1;
+      }
+    });
+    return count;
+  }
+
   function countMeltedIceGroups() {
     var groups = new Set();
     world.iceTiles.forEach(function (tile) {
@@ -821,86 +797,8 @@
     return groups.size;
   }
 
-  function countFrozenWaterGroups() {
-    var groups = new Set();
-    world.waterTiles.forEach(function (tile) {
-      if (tile.frozen) {
-        groups.add(tile.group);
-      }
-    });
-    return groups.size;
-  }
-
-  function countActivatedShadowWalls() {
-    var count = 0;
-    world.tallWalls.forEach(function (wall) {
-      if (wall.shadow && wall.shadowUsed) {
-        count += 1;
-      }
-    });
-    return count;
-  }
-
-  function countActivatedRevealWalls() {
-    var count = 0;
-    world.tallWalls.forEach(function (wall) {
-      if (wall.reveal && wall.revealUsed) {
-        count += 1;
-      }
-    });
-    return count;
-  }
-
-  function getTileElevationAt(x, y) {
-    var key = tileKey(x, y);
-    var floor = world.floors.get(key);
-    if (floor) {
-      return floor.elevation || 0;
-    }
-    var gap = world.gaps.get(key);
-    if (gap && gap.restored) {
-      return gap.elevation || 0;
-    }
-    var iceTile = world.iceTiles.get(key);
-    if (iceTile) {
-      return iceTile.elevation || 0;
-    }
-    var waterTile = world.waterTiles.get(key);
-    if (waterTile) {
-      return waterTile.elevation || 0;
-    }
-    var shadowTile = activeShadowTiles.get(key);
-    if (shadowTile) {
-      return shadowTile.elevation || 0;
-    }
-    var revealTile = activeRevealTiles.get(key);
-    if (revealTile) {
-      return revealTile.elevation || 0;
-    }
-    return 0;
-  }
-
-  function maybeBeginLayerDrop() {
-    var shadowTile = activeShadowTiles.get(tileKey(state.player.x, state.player.y));
-    if (!shadowTile || !shadowTile.descentTo) {
-      return false;
-    }
-    queueMove(
-      shadowTile.descentTo.x,
-      shadowTile.descentTo.y,
-      "floor",
-      shadowTile.descentTo.x - state.player.x,
-      shadowTile.descentTo.y - state.player.y,
-      0.34,
-      shadowTile.descentTo.elevation
-    );
-    setToast("光束向下切开了层面，你跃入" + shadowTile.descentTo.label + "。");
-    setHint("抓住下照显出的路线，继续往更深处前进。");
-    return true;
-  }
-
   function syncAbilityChip(chip) {
-    [shatterChip, memoryChip, fireChip, freezeChip, flashChip, pierceChip].forEach(function (node) {
+    [shatterChip, memoryChip, fireChip, lightChip, flashChip].forEach(function (node) {
       node.classList.remove("is-active");
       node.setAttribute("aria-pressed", "false");
     });
@@ -991,9 +889,9 @@
     });
     if (gap) {
       gap.restored = true;
-      gap.restoreUntil = state.lastTime + 4;
-      setToast("【忆】生效：透明地面被记忆重新编织。");
-      setHint("临时通路已经恢复，但它会在 4 秒后再次消失。");
+      gap.restoreUntil = state.lastTime + 3;
+      setToast("【忆】生效：破碎地面被记忆重新编织。");
+      setHint("空洞已经暂时恢复，但它会在 3 秒后再次消失。");
       updateObjective();
       return;
     }
@@ -1015,34 +913,28 @@
           spawnFireBurst(candidate.x, candidate.y);
         }
       });
-      setToast("【火】生效：冰面被烧掉了，你可以稳定通过。");
-      setHint("冰面已经消失，现在可以正常走过去。");
+      setToast("【火】生效：冰面被烧融，你可以正常踩过去了。");
+      setHint("冰面已经融化，现在可以稳定通过。");
       updateObjective();
       return;
     }
     setToast("附近没有可被【火】烧融的冰面。");
   }
 
-  function castFreeze() {
+  function castLight() {
     if (!state.started || state.victory || state.player.falling || state.player.moveT < 1) {
       return;
     }
-    syncAbilityChip(freezeChip);
-    var waterTile = chooseNearbyTarget(world.waterTiles, 1, function (candidate) {
-      return !candidate.frozen;
-    });
-    if (waterTile) {
-      world.waterTiles.forEach(function (candidate) {
-        if (candidate.group === waterTile.group) {
-          candidate.frozen = true;
-        }
-      });
-      setToast("【冰】生效：透明蓝水面被冻结，可以安全踏上。");
-      setHint("水面已经冻结，立刻通过。");
-      updateObjective();
+    syncAbilityChip(lightChip);
+    if (!state.lightUnlocked) {
+      setToast("【光】尚未解锁，先靠近那盏暖黄的小灯。");
       return;
     }
-    setToast("附近没有可被【冰】冻结的水面。");
+    state.lightUsed = true;
+    state.lightRevealUntil = state.lastTime + 2;
+    setToast("【光】生效：整张地图被微光照亮 2 秒，快记住道路与障碍。");
+    setHint("全图已经短暂显现，抓紧时间记住路线。");
+    updateObjective();
   }
 
   function castFlashlight() {
@@ -1056,14 +948,13 @@
     });
 
     if (wall && wall.shadow) {
-      wall.shadowUntil = state.lastTime + 4;
-      if (!wall.shadowUsed) {
-        wall.shadowUsed = true;
-        state.shadowTriggered += 1;
+      wall.shadowUntil = state.lastTime + wall.shadow.duration;
+      if (state.shadowTriggered < 1) {
+        state.shadowTriggered = 1;
       }
       triggered = true;
-      setToast("【影】生效：高墙把光切成了向下延展的影路。");
-      setHint("快顺着新出现的影路前进，它会在 4 秒后消失。");
+      setToast("手电光束击中高墙，阴影路径被暂时具象化。");
+      setHint("快通过阴影路径，它只会短暂存在。");
     }
 
     state.beam = {
@@ -1076,43 +967,7 @@
     };
 
     if (!triggered) {
-      setToast("靠近有影机关的高墙后再按 F，阴影路径才会出现。");
-    }
-    updateObjective();
-  }
-
-  function castPierce() {
-    if (!state.started || state.victory || state.player.falling || state.player.moveT < 1) {
-      return;
-    }
-    syncAbilityChip(pierceChip);
-    var triggered = false;
-    var wall = chooseNearbyTarget(world.tallWalls, 1, function (candidate) {
-      return Boolean(candidate.reveal);
-    });
-
-    if (wall && wall.reveal) {
-      wall.revealUntil = state.lastTime + 4;
-      if (!wall.revealUsed) {
-        wall.revealUsed = true;
-        state.revealTriggered += 1;
-      }
-      triggered = true;
-      setToast("【透】生效：墙后的隐藏通路被照了出来。");
-      setHint("透出的路只存在 4 秒，别停留。");
-    }
-
-    state.beam = {
-      fromX: state.player.x,
-      fromY: state.player.y,
-      toX: wall ? wall.x : state.player.x + getFacingVector().x * 2.4,
-      toY: wall ? wall.y : state.player.y + getFacingVector().y * 2.4,
-      ttl: 0.26,
-      hit: triggered
-    };
-
-    if (!triggered) {
-      setToast("靠近有透路机关的高墙后再按 E，隐藏通路才会出现。");
+      setToast("靠近高墙后再使用手电，阴影路径才会出现。");
     }
     updateObjective();
   }
@@ -1130,19 +985,15 @@
     if (gap) {
       return gap.restored ? "floor" : "gap";
     }
+    if (world.puddles.has(key)) {
+      return "puddle";
+    }
     var iceTile = world.iceTiles.get(key);
     if (iceTile) {
       return iceTile.melted ? "floor" : "ice";
     }
-    var waterTile = world.waterTiles.get(key);
-    if (waterTile) {
-      return waterTile.frozen ? "frozenWater" : "water";
-    }
     if (activeShadowTiles.has(key)) {
       return "shadow";
-    }
-    if (activeRevealTiles.has(key)) {
-      return "reveal";
     }
     if (world.floors.has(key)) {
       return "floor";
@@ -1156,33 +1007,33 @@
     var gap = world.gaps.get(key);
     var tallWall = world.tallWalls.get(key);
     var iceTile = world.iceTiles.get(key);
-    var waterTile = world.waterTiles.get(key);
+    var puddle = world.puddles.get(key);
 
+    if (puddle) {
+      return "前面是积水，踩上去会失去重心，被惯性带出一步。";
+    }
     if (lowWall && !lowWall.broken) {
       return "前面是矮墙，靠近后按 1 使用【碎】破坏它。";
     }
     if (gap && gap.recoverable && !gap.restored) {
-      return "前面是透明缺口，靠近后按 2 使用【忆】恢复地面，但它只会短暂存在。";
+      return "前面是空洞，靠近后按 2 使用【忆】恢复地面，但它只会短暂存在。";
     }
     if (tallWall && tallWall.shadow) {
-      return "高墙挡住了路，靠近后按 F【影】向下照出 4 秒影路。";
-    }
-    if (tallWall && tallWall.reveal) {
-      return "这面高墙后藏着路，靠近后按 E【透】照出 4 秒通路。";
+      return "高墙挡住了路，绕到合适位置后按 F 用手电制造阴影路径。";
     }
     if (tallWall) {
       return "高墙把路线切开了，去找另一条连通的小路。";
     }
     if (iceTile && !iceTile.melted) {
+      if (!state.iceLessonLearned) {
+        return "前面是冰面，踩上去会沿当前方向一直冲出去。";
+      }
       return "前面是冰面，靠近后按 3 使用【火】烧掉它。";
-    }
-    if (waterTile && !waterTile.frozen) {
-      return "前面是深蓝水面，必须先按 4 使用【冰】冻结。";
     }
     return "";
   }
 
-  function queueMove(nextX, nextY, result, dx, dy, duration, targetElevation) {
+  function queueMove(nextX, nextY, result, dx, dy, duration) {
     state.player.fromX = state.player.x;
     state.player.fromY = state.player.y;
     state.player.toX = nextX;
@@ -1192,8 +1043,6 @@
     state.player.moveDx = dx;
     state.player.moveDy = dy;
     state.player.arrivalType = result;
-    state.player.fromZ = getTileElevationAt(state.player.x, state.player.y);
-    state.player.toZ = typeof targetElevation === "number" ? targetElevation : getTileElevationAt(nextX, nextY);
   }
 
   function continueIceSlide() {
@@ -1209,6 +1058,58 @@
 
     queueMove(nextX, nextY, result, state.player.moveDx, state.player.moveDy, 0.16);
     return true;
+  }
+
+  function triggerSlip() {
+    state.puddleTriggered = true;
+    var nextX = state.player.x + state.player.moveDx;
+    var nextY = state.player.y + state.player.moveDy;
+    var result = walkResult(nextX, nextY);
+    setToast("你踩进了积水，脚下一滑，身体被惯性猛地带出去。");
+    setHint("积水会让你短暂失去重心，先记住落脚点。", "alert");
+    if (result !== "block") {
+      queueMove(nextX, nextY, result, state.player.moveDx, state.player.moveDy, 0.14);
+    }
+    updateObjective();
+  }
+
+  function checkLampUnlock() {
+    var unlocked = false;
+    world.lamps.forEach(function (lamp) {
+      if (lamp.found) {
+        return;
+      }
+      var distance = Math.abs(state.player.x - lamp.x) + Math.abs(state.player.y - lamp.y);
+      if (distance <= 1.5) {
+        lamp.found = true;
+        state.lightUnlocked = true;
+        unlocked = true;
+      }
+    });
+    if (unlocked) {
+      setToast("你靠近了那盏微弱暖灯。局部安全感回来了，同时解锁了 G【光】。");
+      setHint("按 G 使用【光】，整张地图会显现 2 秒。");
+      updateObjective();
+    }
+  }
+
+  function checkLightningZone() {
+    if (state.lightningTriggered) {
+      return;
+    }
+    world.lightningZones.forEach(function (zone) {
+      if (zone.triggered) {
+        return;
+      }
+      if (state.player.x === zone.x && state.player.y === zone.y) {
+        zone.triggered = true;
+        state.lightningTriggered = true;
+        state.lightningBlindUntil = state.lastTime + 1;
+        setToast("一道闪电猛地劈亮夜空，刺目的白光让你瞬间失明。");
+        setHint("强光反而会让你短暂失去视野，先稳住。", "alert");
+        updateObjective();
+      }
+    });
   }
 
   function tryMove(dx, dy) {
@@ -1242,29 +1143,23 @@
       }
     }
 
-    if (result === "water") {
-      setHint(obstacleHintAt(nextX, nextY) || "透明蓝水面还没冻结，踩上去会直接坠落。");
-    }
-
     queueMove(nextX, nextY, result, dx, dy, 0.22);
   }
 
   function refreshContextHint() {
     if (!state.started) {
-      setHint("先输入名字并点击开始，试炼开始后才会显示下一步提示。");
+      setHint("先输入名字并点击开始。第二关只会照亮你附近两格，真正进入后再看提示。");
       return;
     }
 
     if (state.victory) {
-      setHint("终点已经点亮，返回首页或继续体验场景。");
+      setHint("失重回廊已经走完。你可以返回首页，或再试一次这张暗场地图。");
       return;
     }
 
     if (state.player.falling) {
       if (state.player.fallReason === "void") {
         setHint("你跌出了地图边缘，正在回到最近的安全区域。");
-      } else if (state.player.fallReason === "water") {
-        setHint("你沉进了水里，正在回到最近的安全区域。");
       } else {
         setHint("你掉入了空洞，正在回到最近的安全区域。");
       }
@@ -1272,17 +1167,7 @@
     }
 
     if (isPlayerOnShadowTile()) {
-      var activeShadow = activeShadowTiles.get(tileKey(state.player.x, state.player.y));
-      if (activeShadow && activeShadow.descentTo) {
-        setHint("脚下是向下延展的影路，继续前压就会跃入下一层。");
-      } else {
-        setHint("你正站在阴影路径上，抓紧时间通过。");
-      }
-      return;
-    }
-
-    if (isPlayerOnRevealTile()) {
-      setHint("你正站在透出的临时通路上，它会很快消失。");
+      setHint("你正站在阴影路径上，范围视野之外看不清边界，抓紧时间通过。");
       return;
     }
 
@@ -1295,64 +1180,62 @@
     var iceTile = chooseNearbyTarget(world.iceTiles, 1, function (candidate) {
       return !candidate.melted;
     });
-    var waterTile = chooseNearbyTarget(world.waterTiles, 1, function (candidate) {
-      return !candidate.frozen;
+    var puddle = chooseNearbyTarget(world.puddles, 1);
+    var lamp = chooseNearbyTarget(world.lamps, 1, function (candidate) {
+      return !candidate.found;
     });
     var tallWall = chooseNearbyTarget(world.tallWalls, 1, function (candidate) {
       return Boolean(candidate.shadow);
     });
-    var pierceWall = chooseNearbyTarget(world.tallWalls, 1, function (candidate) {
-      return Boolean(candidate.reveal);
-    });
     var solidTallWall = chooseNearbyTarget(world.tallWalls, 1, function (candidate) {
-      return !candidate.shadow && !candidate.reveal;
+      return !candidate.shadow;
     });
 
+    if (puddle) {
+      setHint("前面有积水，踩上去会失去重心，被惯性带出一步。");
+      return;
+    }
+    if (lamp) {
+      setHint("那盏暖黄小灯就在附近。靠近它，先获得一次局部安全感。");
+      return;
+    }
+    if (state.lightUnlocked && !state.lightUsed) {
+      setHint("G【光】已经解锁。按下后可看清全图 2 秒，先记住前面的障碍布局。");
+      return;
+    }
     if (lowWall) {
-      setHint("靠近矮墙后，按 1 使用【碎】破坏它。");
+      setHint("矮墙已经进入近距离视野，按 1 使用【碎】破坏它。");
       return;
     }
     if (gap) {
-      setHint("靠近透明缺口后，按 2 使用【忆】恢复地面，注意它 4 秒后会消失。");
+      setHint("空洞就在脚边前方，按 2 使用【忆】恢复地面，注意它 3 秒后会消失。");
       return;
     }
     if (iceTile) {
-      setHint("靠近冰面后，按 3 使用【火】烧掉它，就能正常行走。");
-      return;
-    }
-    if (waterTile) {
-      setHint("前方是深蓝水面。靠近后按 4 使用【冰】冻结它。");
+      if (!state.iceLessonLearned) {
+        setHint("前面是冰面，先踩上去试一次，你会沿当前方向被甩出去。");
+      } else {
+        setHint("冰面已经进入范围视野内，按 3 使用【火】烧掉它，就能正常行走。");
+      }
       return;
     }
     if (tallWall) {
-      setHint("靠近高墙后，按 F【影】向下照出 4 秒路线，有些影路还能直接落层。");
-      return;
-    }
-    if (pierceWall) {
-      setHint("靠近高墙后，按 E【透】照出 4 秒临时通路。");
+      setHint("高墙已经靠近，按 F 用手电照射，制造 4 秒临时阴影路径。");
       return;
     }
     if (solidTallWall) {
-      setHint("附近高墙把空间切开了，沿着连通的小路继续寻找出口。");
+      setHint("附近高墙把空间切开了，顺着能看清的近处地块继续绕过去。");
       return;
     }
-    if (countActivatedShadowWalls() < world.shadowCount) {
-      setHint("继续前进，找到下一面高墙并用 F【影】切开向下的路线。");
+    if (state.shadowTriggered < 1) {
+      setHint("继续沿回廊前进。地图很暗，先把近处两格看清，再往下一段高墙去。");
       return;
     }
-    if (countActivatedRevealWalls() < world.revealCount) {
-      setHint("阴影桥之后还有一道隐藏通路，别忘了用 E【透】。");
-      return;
-    }
-    setHint("继续前进，组合不同规则穿过障碍。");
+    setHint("继续前进，在有限视野里组合不同规则穿过障碍。");
   }
 
   function isPlayerOnShadowTile() {
     return activeShadowTiles.has(tileKey(state.player.x, state.player.y));
-  }
-
-  function isPlayerOnRevealTile() {
-    return activeRevealTiles.has(tileKey(state.player.x, state.player.y));
   }
 
   function triggerFall() {
@@ -1383,17 +1266,6 @@
     setHint("你跌出了地图边缘，正在回到重置点。", "alert");
   }
 
-  function triggerWaterFall() {
-    if (state.player.falling) {
-      return;
-    }
-    state.player.falling = true;
-    state.player.fallT = 0;
-    state.player.fallReason = "water";
-    setToast("透明蓝水面还没冻结，你直接沉了下去。");
-    setHint("先冻结水面再通过。", "alert");
-  }
-
   function respawnPlayer() {
     state.player.falling = false;
     state.player.fallT = 0;
@@ -1408,33 +1280,12 @@
     state.player.facing = "right";
     state.player.moveDx = 1;
     state.player.moveDy = -1;
-    state.player.fromZ = getTileElevationAt(world.start.x, world.start.y);
-    state.player.toZ = getTileElevationAt(world.start.x, world.start.y);
     state.player.sliding = false;
     state.player.fallReason = "gap";
     state.player.moveDuration = 0.22;
     world.iceTiles.forEach(function (tile) {
       tile.melted = false;
     });
-    world.waterTiles.forEach(function (tile) {
-      tile.frozen = false;
-    });
-    world.gaps.forEach(function (gap) {
-      if (gap.recoverable) {
-        gap.restored = false;
-        gap.restoreUntil = 0;
-      }
-    });
-    world.tallWalls.forEach(function (wall) {
-      wall.shadowUntil = 0;
-      wall.revealUntil = 0;
-      wall.shadowUsed = false;
-      wall.revealUsed = false;
-    });
-    state.shadowTriggered = 0;
-    state.revealTriggered = 0;
-    activeShadowTiles.clear();
-    activeRevealTiles.clear();
     setHint("你已回到重置点，请留意红色警示后再重新尝试。", "alert");
   }
 
@@ -1443,12 +1294,7 @@
     world.tallWalls.forEach(function (wall) {
       if (wall.shadow && wall.shadowUntil > now) {
         wall.shadow.shadowTiles.forEach(function (tile) {
-          activeShadowTiles.set(tileKey(tile.x, tile.y), {
-            x: tile.x,
-            y: tile.y,
-            elevation: typeof tile.elevation === "number" ? tile.elevation : (wall.elevation || 0),
-            descentTo: tile.descentTo || null
-          });
+          activeShadowTiles.add(tileKey(tile.x, tile.y));
         });
       }
     });
@@ -1459,21 +1305,6 @@
       if (gap.recoverable && gap.restored && gap.restoreUntil <= now) {
         gap.restored = false;
         gap.restoreUntil = 0;
-      }
-    });
-  }
-
-  function updateRevealTiles(now) {
-    activeRevealTiles.clear();
-    world.tallWalls.forEach(function (wall) {
-      if (wall.reveal && wall.revealUntil > now) {
-        wall.reveal.revealTiles.forEach(function (tile) {
-          activeRevealTiles.set(tileKey(tile.x, tile.y), {
-            x: tile.x,
-            y: tile.y,
-            elevation: typeof tile.elevation === "number" ? tile.elevation : (wall.elevation || 0)
-          });
-        });
       }
     });
   }
@@ -1496,16 +1327,19 @@
           triggerFall();
         } else if (state.player.arrivalType === "void") {
           triggerVoidFall();
-        } else if (state.player.arrivalType === "water") {
-          triggerWaterFall();
         } else {
           if (!activeShadowTiles.has(tileKey(state.player.x, state.player.y)) && state.player.arrivalType === "shadow") {
             triggerFall();
             return;
           }
-          if (!activeRevealTiles.has(tileKey(state.player.x, state.player.y)) && state.player.arrivalType === "reveal") {
-            triggerFall();
-            return;
+
+          if (state.player.arrivalType === "puddle") {
+            var puddle = world.puddles.get(tileKey(state.player.x, state.player.y));
+            if (puddle && !puddle.triggered) {
+              puddle.triggered = true;
+              triggerSlip();
+              return;
+            }
           }
 
           var iceTile = world.iceTiles.get(tileKey(state.player.x, state.player.y));
@@ -1518,14 +1352,13 @@
             state.player.sliding = false;
           }
 
-          if (state.player.arrivalType === "shadow" && maybeBeginLayerDrop()) {
-            return;
-          }
+          checkLampUnlock();
+          checkLightningZone();
 
           if (state.player.x === world.goal.x && state.player.y === world.goal.y && !state.victory) {
             state.victory = true;
             state.elapsed = state.lastTime - state.runStartedAt;
-            setToast("Stage 2 完成。你成功穿过了失重回廊。");
+            setToast("Stage 2 完成。你已经学会在有限视野里继续用文字改写规则。");
             submitScore();
             updateObjective();
           }
@@ -1537,10 +1370,6 @@
       if (currentTile === "void") {
         triggerVoidFall();
       } else if (currentTile === "gap") {
-        triggerFall();
-      } else if (currentTile === "water") {
-        triggerWaterFall();
-      } else if (currentTile === "reveal" && !activeRevealTiles.has(tileKey(state.player.x, state.player.y))) {
         triggerFall();
       }
     }
@@ -1558,17 +1387,12 @@
 
   function getPlayerInterpolatedPosition() {
     if (state.player.moveT >= 1) {
-      return {
-        x: state.player.x,
-        y: state.player.y,
-        z: getTileElevationAt(state.player.x, state.player.y)
-      };
+      return { x: state.player.x, y: state.player.y };
     }
     var t = easeInOut(state.player.moveT);
     return {
       x: state.player.fromX + (state.player.toX - state.player.fromX) * t,
-      y: state.player.fromY + (state.player.toY - state.player.fromY) * t,
-      z: state.player.fromZ + (state.player.toZ - state.player.fromZ) * t
+      y: state.player.fromY + (state.player.toY - state.player.fromY) * t
     };
   }
 
@@ -1581,332 +1405,40 @@
     var height = window.innerHeight;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.clearRect(0, 0, width, height);
-
-    if (state.intro.active) {
-      drawIntroScene(time, width, height);
-      return;
-    }
-
     updateCamera(width, height);
 
     drawBackground(width, height, time);
-    drawFloatingGlyphs(width, height, time);
-    drawMotes(width, height, time);
     drawWorldBase();
     drawFloorLayer();
     drawShadowTiles(time);
-    drawRevealTiles(time);
     drawObjects();
     drawWorldPrompt();
     drawFireBursts();
     drawBeam(time);
-  }
-
-  function drawIntroScene(time, width, height) {
-    var phase = state.intro.phase;
-    drawIntroBackdrop(width, height, time, phase);
-
-    if (phase === "entry" || phase === "falling") {
-      drawIntroFallingScene(width, height, time);
-    } else if (phase === "street" || phase === "light-touch" || phase === "light-rewrite") {
-      drawIntroStreetScene(width, height, time, phase);
-    } else if (phase === "shadow-sense") {
-      drawIntroShadowScene(width, height, time);
-    } else if (phase === "tower-reveal") {
-      drawIntroTowerScene(width, height, time);
-    }
-
-    if (state.intro.rewriteFlashUntil > time) {
-      var flashAlpha = Math.max(0, (state.intro.rewriteFlashUntil - time) / 1.2);
-      ctx.save();
-      ctx.fillStyle = "rgba(247, 240, 188, " + String(flashAlpha * 0.34) + ")";
-      ctx.fillRect(0, 0, width, height);
-      ctx.restore();
-    }
-
-    drawIntroVignette(width, height);
-  }
-
-  function drawIntroBackdrop(width, height, time, phase) {
-    var gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, phase === "street" ? "#101320" : "#060a14");
-    gradient.addColorStop(0.48, phase === "tower-reveal" ? "#091120" : "#05070e");
-    gradient.addColorStop(1, "#020309");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.save();
-    floatingMotes.forEach(function (mote, index) {
-      var x = mote.x * width + Math.sin(time * (0.18 + mote.speed) + index) * 26;
-      var y = mote.y * height + Math.cos(time * (0.12 + mote.speed) + index * 1.4) * 22;
-      ctx.fillStyle = "rgba(228, 238, 255, " + String(Math.min(0.32, mote.alpha * 0.8)) + ")";
-      ctx.beginPath();
-      ctx.arc(x, y, mote.r * 0.8, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    ctx.restore();
-  }
-
-  function drawIntroFallingScene(width, height, time) {
-    var i;
-    ctx.save();
-    for (i = 0; i < 18; i += 1) {
-      var progress = (time * 0.12 + i * 0.07) % 1;
-      var x = width * (0.1 + (i % 7) * 0.12) + Math.sin(time * 0.8 + i) * 60;
-      var y = -height * 0.15 + progress * height * 1.3;
-      var length = 110 + (i % 4) * 48;
-      ctx.strokeStyle = i % 3 === 0 ? "rgba(113, 184, 255, 0.18)" : "rgba(244, 232, 178, 0.1)";
-      ctx.lineWidth = 1 + (i % 3);
-      ctx.beginPath();
-      ctx.moveTo(x, y - length);
-      ctx.lineTo(x + 18, y + length);
-      ctx.stroke();
-    }
-
-    ["光", "影", "忆", "碎", "夜"].forEach(function (glyph, index) {
-      ctx.font = "700 " + String(44 + index * 8) + "px Noto Serif SC, serif";
-      ctx.fillStyle = "rgba(231, 240, 255, " + String(0.06 + index * 0.02) + ")";
-      ctx.fillText(
-        glyph,
-        width * (0.16 + index * 0.18) + Math.sin(time * 0.5 + index) * 34,
-        height * (0.18 + (index % 2) * 0.22) + Math.cos(time * 0.6 + index) * 26
-      );
-    });
-
-    for (i = 0; i < 6; i += 1) {
-      var px = width * (0.1 + i * 0.16) + Math.sin(time * 0.46 + i) * 28;
-      var py = height * (0.62 + (i % 2) * 0.08) + Math.cos(time * 0.5 + i) * 18;
-      ctx.fillStyle = "rgba(20, 28, 46, 0.64)";
-      ctx.beginPath();
-      ctx.moveTo(px, py - 18);
-      ctx.lineTo(px + 48, py + 8);
-      ctx.lineTo(px, py + 34);
-      ctx.lineTo(px - 48, py + 8);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(178, 212, 255, 0.08)";
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  function drawIntroStreetScene(width, height, time, phase) {
-    var roadTop = height * 0.36;
-    var roadBottom = height * 0.98;
-
-    ctx.save();
-    ctx.filter = "blur(18px)";
-    [
-      { x: width * 0.18, y: height * 0.28, r: 110, c: "rgba(78, 160, 255, 0.22)" },
-      { x: width * 0.34, y: height * 0.22, r: 86, c: "rgba(255, 130, 176, 0.16)" },
-      { x: width * 0.72, y: height * 0.2, r: 120, c: "rgba(120, 255, 225, 0.14)" },
-      { x: width * 0.86, y: height * 0.3, r: 78, c: "rgba(255, 208, 132, 0.14)" }
-    ].forEach(function (light, index) {
-      ctx.fillStyle = light.c;
-      ctx.beginPath();
-      ctx.arc(light.x + Math.sin(time * 0.4 + index) * 18, light.y, light.r, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    ctx.restore();
-
-    ctx.save();
-    ctx.fillStyle = "rgba(9, 13, 24, 0.92)";
-    ctx.beginPath();
-    ctx.moveTo(width * 0.2, roadTop);
-    ctx.lineTo(width * 0.8, roadTop);
-    ctx.lineTo(width * 0.64, roadBottom);
-    ctx.lineTo(width * 0.36, roadBottom);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.globalAlpha = 0.42;
-    ctx.strokeStyle = "rgba(103, 149, 214, 0.2)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(width * 0.5, roadTop + 26);
-    ctx.lineTo(width * 0.5 + Math.sin(time * 0.7) * 12, roadBottom - 20);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.save();
-    ctx.fillStyle = "rgba(21, 31, 47, 0.78)";
-    ctx.fillRect(width * 0.1, height * 0.26, 70, height * 0.46);
-    ctx.fillRect(width * 0.74, height * 0.18, 110, height * 0.54);
-    ctx.fillRect(width * 0.54, height * 0.14, 80, height * 0.48);
-    ctx.restore();
-
-    ctx.save();
-    ctx.filter = "blur(22px)";
-    ctx.fillStyle = "rgba(198, 225, 255, 0.08)";
-    ctx.fillRect(width * 0.34, height * 0.72, width * 0.32, 80);
-    ctx.restore();
-
-    if (phase === "light-touch" || phase === "light-rewrite") {
-      var glyphY = height * 0.64 + Math.sin(time * 1.4) * 6;
-      ctx.save();
-      ctx.font = "700 120px Noto Serif SC, serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.shadowBlur = phase === "light-rewrite" ? 64 : 34;
-      ctx.shadowColor = phase === "light-rewrite" ? "rgba(244, 232, 178, 0.4)" : "rgba(143, 231, 255, 0.18)";
-      ctx.fillStyle = phase === "light-rewrite" ? "rgba(247, 240, 188, 0.86)" : "rgba(198, 232, 255, 0.54)";
-      ctx.fillText("光", width * 0.5, glyphY);
-      ctx.restore();
-
-      if (phase === "light-rewrite") {
-        ctx.save();
-        ctx.strokeStyle = "rgba(247, 240, 188, 0.16)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(width * 0.32, height * 0.58);
-        ctx.lineTo(width * 0.46, height * 0.5);
-        ctx.lineTo(width * 0.62, height * 0.54);
-        ctx.lineTo(width * 0.72, height * 0.44);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
-
-    drawIntroFigure(width * 0.5, height * 0.78, time, phase !== "light-rewrite");
-  }
-
-  function drawIntroShadowScene(width, height, time) {
-    ctx.save();
-    ctx.fillStyle = "rgba(4, 7, 14, 0.92)";
-    ctx.fillRect(0, 0, width, height);
-    ctx.restore();
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(190, 216, 255, 0.08)";
-    ctx.lineWidth = 1.4;
-    [
-      [0.2, 0.62, 0.4, 0.44],
-      [0.42, 0.52, 0.58, 0.42],
-      [0.54, 0.64, 0.76, 0.48],
-      [0.32, 0.8, 0.68, 0.8]
-    ].forEach(function (line, index) {
-      ctx.globalAlpha = 0.55 + Math.sin(time * 0.7 + index) * 0.12;
-      ctx.beginPath();
-      ctx.moveTo(width * line[0], height * line[1]);
-      ctx.lineTo(width * line[2], height * line[3]);
-      ctx.stroke();
-    });
-    ctx.restore();
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(213, 226, 255, 0.12)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(width * 0.5, height * 0.76, 54 + Math.sin(time * 2.4) * 6, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-
-    drawIntroFigure(width * 0.5, height * 0.78, time, true);
-  }
-
-  function drawIntroTowerScene(width, height, time) {
-    var cx = width * 0.52;
-    var cy = height * 0.58;
-    ctx.save();
-    ctx.translate(cx, cy);
-
-    ctx.fillStyle = "rgba(16, 25, 40, 0.92)";
-    ctx.beginPath();
-    ctx.moveTo(-100, 120);
-    ctx.lineTo(-36, -160);
-    ctx.lineTo(54, -160);
-    ctx.lineTo(120, 120);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(208, 226, 255, 0.14)";
-    ctx.lineWidth = 2;
-    [-120, -50, 20, 90].forEach(function (y) {
-      ctx.beginPath();
-      ctx.ellipse(10, y, 96 - y * -0.1, 20, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-
-    ctx.fillStyle = "rgba(244, 232, 178, 0.14)";
-    ctx.beginPath();
-    ctx.arc(6, -156, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    ["光", "影", "忆", "碎"].forEach(function (glyph, index) {
-      var angle = time * 0.36 + index * (Math.PI / 2);
-      var gx = cx + Math.cos(angle) * 220;
-      var gy = cy - 70 + Math.sin(angle) * 110;
-      ctx.save();
-      ctx.translate(gx, gy);
-      ctx.rotate(Math.sin(time * 0.2 + index) * 0.14);
-      ctx.font = "700 " + String(58 - index * 4) + "px Noto Serif SC, serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = index % 2 === 0 ? "rgba(207, 236, 255, 0.28)" : "rgba(244, 232, 178, 0.24)";
-      ctx.shadowBlur = 24;
-      ctx.shadowColor = index % 2 === 0 ? "rgba(143, 231, 255, 0.2)" : "rgba(244, 232, 178, 0.18)";
-      ctx.fillText(glyph, 0, 0);
-      ctx.restore();
-    });
-  }
-
-  function drawIntroFigure(x, y, time, hesitant) {
-    ctx.save();
-    ctx.translate(x + Math.sin(time * 0.7) * (hesitant ? 2 : 6), y);
-    ctx.globalAlpha = 0.92;
-    ctx.fillStyle = "rgba(8, 12, 22, 0.96)";
-    ctx.beginPath();
-    ctx.arc(0, -48, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-16, -26);
-    ctx.lineTo(16, -26);
-    ctx.lineTo(24, 34);
-    ctx.lineTo(-24, 34);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(206, 222, 255, 0.08)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(-8, 34);
-    ctx.lineTo(-14, 86);
-    ctx.moveTo(10, 34);
-    ctx.lineTo(18, 84);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawIntroVignette(width, height) {
-    var vignette = ctx.createRadialGradient(width * 0.5, height * 0.52, width * 0.08, width * 0.5, height * 0.52, width * 0.7);
-    vignette.addColorStop(0, "rgba(0,0,0,0)");
-    vignette.addColorStop(1, "rgba(0,0,0,0.62)");
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, width, height);
+    drawLightningFlash();
   }
 
   function drawBackground(width, height, time) {
     var gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, "#0d1529");
-    gradient.addColorStop(1, "#07111c");
+    gradient.addColorStop(0, "#060912");
+    gradient.addColorStop(0.58, "#050811");
+    gradient.addColorStop(1, "#02040a");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
     ctx.save();
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = "rgba(95, 191, 119, 0.08)";
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = "rgba(20, 28, 46, 0.6)";
     ctx.beginPath();
-    ctx.ellipse(width * 0.3, height * 0.18, 220, 90, time * 0.03, 0, Math.PI * 2);
+    ctx.ellipse(width * 0.35, height * 0.2, 260, 120, time * 0.02, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(139, 107, 232, 0.08)";
+    ctx.fillStyle = "rgba(14, 20, 34, 0.56)";
     ctx.beginPath();
-    ctx.ellipse(width * 0.74, height * 0.22, 200, 80, -time * 0.02, 0, Math.PI * 2);
+    ctx.ellipse(width * 0.74, height * 0.18, 240, 110, -time * 0.018, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(118, 192, 255, 0.06)";
+    ctx.fillStyle = "rgba(10, 14, 24, 0.54)";
     ctx.beginPath();
-    ctx.ellipse(width * 0.5, height * 0.72, 280, 120, time * 0.015, 0, Math.PI * 2);
+    ctx.ellipse(width * 0.5, height * 0.78, 340, 160, time * 0.012, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -1963,9 +1495,9 @@
     });
     world.gaps.forEach(function (gap) {
       if (!gap.restored) {
-        tiles.push({ x: gap.x, y: gap.y, type: "gap", elevation: gap.elevation || 0 });
+        tiles.push({ x: gap.x, y: gap.y, type: "gap", elevation: 0 });
       } else {
-        tiles.push({ x: gap.x, y: gap.y, type: "memory", elevation: gap.elevation || 0 });
+        tiles.push({ x: gap.x, y: gap.y, type: "memory", elevation: 0 });
       }
     });
     world.iceTiles.forEach(function (iceTile) {
@@ -1973,25 +1505,32 @@
         x: iceTile.x,
         y: iceTile.y,
         type: iceTile.melted ? "melted" : "ice",
-        elevation: iceTile.elevation || 0
+        elevation: 0
       });
     });
-    world.waterTiles.forEach(function (waterTile) {
+    world.puddles.forEach(function (puddle) {
       tiles.push({
-        x: waterTile.x,
-        y: waterTile.y,
-        type: waterTile.frozen ? "frozenWater" : "water",
-        elevation: waterTile.elevation || 0
+        x: puddle.x,
+        y: puddle.y,
+        type: "puddle",
+        elevation: 0
       });
     });
     tiles.sort(function (a, b) {
-      return ((a.x + a.y) * 1000 + (a.elevation || 0)) - ((b.x + b.y) * 1000 + (b.elevation || 0));
+      return (a.x + a.y) - (b.x + b.y);
     });
     tiles.forEach(function (cell) {
+      var visibility = getTileVisibility(cell.x, cell.y);
+      if (isTileHidden(visibility)) {
+        return;
+      }
       if (cell.type === "gap") {
-        drawGap(cell.x, cell.y, cell.elevation || 0);
+        ctx.save();
+        ctx.globalAlpha = visibility;
+        drawGap(cell.x, cell.y);
+        ctx.restore();
       } else {
-        drawTilePrism(cell.x, cell.y, cell.type, FLOOR_DEPTH, cell.elevation || 0, 1);
+        drawTilePrism(cell.x, cell.y, cell.type, FLOOR_DEPTH, cell.elevation || 0, visibility);
       }
     });
   }
@@ -2014,7 +1553,7 @@
           x: gap.x,
           y: gap.y,
           type: "memory",
-          elevation: gap.elevation || 0
+          elevation: 0
         });
       }
     });
@@ -2024,16 +1563,16 @@
         x: iceTile.x,
         y: iceTile.y,
         type: iceTile.melted ? "melted" : "ice",
-        elevation: iceTile.elevation || 0
+        elevation: 0
       });
     });
 
-    world.waterTiles.forEach(function (waterTile, key) {
+    world.puddles.forEach(function (puddle, key) {
       surfaces.set(key, {
-        x: waterTile.x,
-        y: waterTile.y,
-        type: waterTile.frozen ? "frozenWater" : "water",
-        elevation: waterTile.elevation || 0
+        x: puddle.x,
+        y: puddle.y,
+        type: "puddle",
+        elevation: 0
       });
     });
 
@@ -2141,16 +1680,16 @@
   }
 
   function drawShadowTiles(time) {
-    activeShadowTiles.forEach(function (tile) {
-      var pulse = 0.76 + Math.sin(time * 6 + tile.x + tile.y) * 0.12;
-      drawTilePrism(tile.x, tile.y, "shadow", 10, tile.elevation || 0, pulse);
-    });
-  }
-
-  function drawRevealTiles(time) {
-    activeRevealTiles.forEach(function (tile) {
-      var pulse = 0.82 + Math.sin(time * 6 + tile.x + tile.y) * 0.1;
-      drawTilePrism(tile.x, tile.y, "reveal", 10, tile.elevation || 0, pulse);
+    activeShadowTiles.forEach(function (key) {
+      var parts = key.split(",");
+      var x = Number(parts[0]);
+      var y = Number(parts[1]);
+      var visibility = getTileVisibility(x, y);
+      if (isTileHidden(visibility)) {
+        return;
+      }
+      var pulse = 0.76 + Math.sin(time * 6 + x + y) * 0.12;
+      drawTilePrism(x, y, "shadow", 10, 0, pulse * visibility);
     });
   }
 
@@ -2165,18 +1704,18 @@
     }
     if (typeA === "ice" || typeB === "ice") {
       return {
-        top: "rgba(204, 243, 255, 0.94)",
-        side: "rgba(116, 172, 196, 0.86)",
-        stroke: "rgba(248, 254, 255, 0.3)",
-        glow: "rgba(242, 252, 255, 0.24)"
+        top: "rgba(158, 226, 255, 0.9)",
+        side: "rgba(76, 124, 148, 0.84)",
+        stroke: "rgba(244, 252, 255, 0.22)",
+        glow: "rgba(240, 251, 255, 0.22)"
       };
     }
-    if (typeA === "water" || typeB === "water" || typeA === "frozenWater" || typeB === "frozenWater" || typeA === "reveal" || typeB === "reveal") {
+    if (typeA === "puddle" || typeB === "puddle") {
       return {
-        top: typeA === "reveal" || typeB === "reveal" ? "rgba(168, 241, 255, 0.86)" : "rgba(32, 112, 198, 0.62)",
-        side: typeA === "reveal" || typeB === "reveal" ? "rgba(62, 119, 146, 0.76)" : "rgba(14, 49, 103, 0.8)",
-        stroke: "rgba(229, 250, 255, 0.2)",
-        glow: "rgba(98, 177, 255, 0.16)"
+        top: "rgba(95, 145, 188, 0.84)",
+        side: "rgba(36, 66, 95, 0.78)",
+        stroke: "rgba(214, 236, 255, 0.16)",
+        glow: "rgba(184, 220, 255, 0.08)"
       };
     }
     if (typeA === "melted" || typeB === "melted" || typeA === "wood" || typeB === "wood") {
@@ -2200,46 +1739,47 @@
       return null;
     }
 
+    var lamp = chooseNearbyTarget(world.lamps, 1, function (candidate) {
+      return !candidate.found;
+    });
+    if (lamp) {
+      return { x: lamp.x, y: lamp.y, text: "靠近暖灯" };
+    }
+
+    if (state.lightUnlocked && !state.lightUsed) {
+      return { x: state.player.x, y: state.player.y, text: "G  光照全图" };
+    }
+
     var lowWall = chooseNearbyTarget(world.lowWalls, 1, function (candidate) {
       return !candidate.broken;
     });
     if (lowWall) {
-      return { x: lowWall.x, y: lowWall.y, elevation: lowWall.elevation || 0, text: "1  碎破墙" };
+      return { x: lowWall.x, y: lowWall.y, text: "1  碎破墙" };
     }
 
     var gap = chooseNearbyTarget(world.gaps, 1, function (candidate) {
       return candidate.recoverable && !candidate.restored;
     });
     if (gap) {
-      return { x: gap.x, y: gap.y, elevation: gap.elevation || 0, text: "2  忆补路" };
+      return { x: gap.x, y: gap.y, text: "2  忆补路" };
     }
 
     var iceTile = chooseNearbyTarget(world.iceTiles, 1, function (candidate) {
       return !candidate.melted;
     });
     if (iceTile) {
-      return { x: iceTile.x, y: iceTile.y, elevation: iceTile.elevation || 0, text: "3  火融冰" };
-    }
-
-    var waterTile = chooseNearbyTarget(world.waterTiles, 1, function (candidate) {
-      return !candidate.frozen;
-    });
-    if (waterTile) {
-      return { x: waterTile.x, y: waterTile.y, elevation: waterTile.elevation || 0, text: "4  冰封水面" };
+      return {
+        x: iceTile.x,
+        y: iceTile.y,
+        text: state.iceLessonLearned ? "3  火融冰" : "冰面会冲刺"
+      };
     }
 
     var tallWall = chooseNearbyTarget(world.tallWalls, 1, function (candidate) {
       return Boolean(candidate.shadow);
     });
     if (tallWall) {
-      return { x: tallWall.x, y: tallWall.y, elevation: tallWall.elevation || 0, text: "F  影成桥" };
-    }
-
-    var pierceWall = chooseNearbyTarget(world.tallWalls, 1, function (candidate) {
-      return Boolean(candidate.reveal);
-    });
-    if (pierceWall) {
-      return { x: pierceWall.x, y: pierceWall.y, elevation: pierceWall.elevation || 0, text: "E  透照路" };
+      return { x: tallWall.x, y: tallWall.y, text: "F  手电成桥" };
     }
 
     return null;
@@ -2251,7 +1791,7 @@
       return;
     }
 
-    var point = isoPoint(prompt.x, prompt.y, (prompt.elevation || 0) + 96);
+    var point = isoPoint(prompt.x, prompt.y, 96);
     ctx.save();
     ctx.font = "700 13px Inter, Segoe UI, Arial, sans-serif";
     ctx.textAlign = "center";
@@ -2292,27 +1832,56 @@
 
   function drawObjects() {
     var renderables = [];
+    world.lamps.forEach(function (lamp) {
+      renderables.push({ type: "lamp", sort: lamp.x + lamp.y + 0.62, data: lamp });
+    });
     world.lowWalls.forEach(function (wall) {
       if (!wall.broken) {
-        renderables.push({ type: "lowWall", sort: (wall.x + wall.y) * 1000 + (wall.elevation || 0) + 68, data: wall });
+        renderables.push({ type: "lowWall", sort: wall.x + wall.y + 0.68, data: wall });
       }
     });
     world.tallWalls.forEach(function (wall) {
-      renderables.push({ type: "tallWall", sort: (wall.x + wall.y) * 1000 + (wall.elevation || 0) + 88, data: wall });
+      renderables.push({ type: "tallWall", sort: wall.x + wall.y + 0.88, data: wall });
     });
-    renderables.push({ type: "goal", sort: (world.goal.x + world.goal.y) * 1000 + getTileElevationAt(world.goal.x, world.goal.y) + 52, data: world.goal });
-    renderables.push({ type: "player", sort: (getPlayerInterpolatedPosition().x + getPlayerInterpolatedPosition().y) * 1000 + (getPlayerInterpolatedPosition().z || 0) + 76, data: null });
+    renderables.push({ type: "goal", sort: world.goal.x + world.goal.y + 0.52, data: world.goal });
+    renderables.push({ type: "player", sort: getPlayerInterpolatedPosition().x + getPlayerInterpolatedPosition().y + 0.76, data: null });
     renderables.sort(function (a, b) {
       return a.sort - b.sort;
     });
 
     renderables.forEach(function (item) {
-      if (item.type === "lowWall") {
-        drawWall(item.data.x, item.data.y, LOW_WALL_H, 0.82, "low", item.data.elevation || 0);
+      if (item.type === "lamp") {
+        var lampVisibility = getTileVisibility(item.data.x, item.data.y);
+        if (!isTileHidden(lampVisibility)) {
+          ctx.save();
+          ctx.globalAlpha = lampVisibility;
+          drawLamp(item.data);
+          ctx.restore();
+        }
+      } else if (item.type === "lowWall") {
+        var lowVisibility = getTileVisibility(item.data.x, item.data.y);
+        if (!isTileHidden(lowVisibility)) {
+          ctx.save();
+          ctx.globalAlpha = lowVisibility;
+          drawWall(item.data.x, item.data.y, LOW_WALL_H, 0.82, "low");
+          ctx.restore();
+        }
       } else if (item.type === "tallWall") {
-        drawTallWall(item.data);
+        var tallVisibility = getTileVisibility(item.data.x, item.data.y);
+        if (!isTileHidden(tallVisibility)) {
+          ctx.save();
+          ctx.globalAlpha = tallVisibility;
+          drawTallWall(item.data);
+          ctx.restore();
+        }
       } else if (item.type === "goal") {
-        drawGoal(world.goal.x, world.goal.y);
+        var goalVisibility = getTileVisibility(world.goal.x, world.goal.y);
+        if (!isTileHidden(goalVisibility)) {
+          ctx.save();
+          ctx.globalAlpha = goalVisibility;
+          drawGoal(world.goal.x, world.goal.y);
+          ctx.restore();
+        }
       } else if (item.type === "player") {
         drawPlayer();
       }
@@ -2350,19 +1919,15 @@
     polygon([top, right, bottom, left], true);
     ctx.stroke();
 
-    if (type === "moss" || type === "memory" || type === "altar" || type === "ice" || type === "melted" || type === "water" || type === "frozenWater" || type === "reveal") {
+    if (type === "moss" || type === "memory" || type === "altar" || type === "ice" || type === "melted" || type === "puddle") {
       if (type === "altar") {
         ctx.fillStyle = "rgba(244, 232, 178, 0.28)";
       } else if (type === "ice") {
         ctx.fillStyle = "rgba(239, 252, 255, 0.34)";
-      } else if (type === "water") {
-        ctx.fillStyle = "rgba(214, 245, 255, 0.18)";
-      } else if (type === "frozenWater") {
-        ctx.fillStyle = "rgba(235, 250, 255, 0.28)";
-      } else if (type === "reveal") {
-        ctx.fillStyle = "rgba(214, 248, 255, 0.22)";
       } else if (type === "melted") {
         ctx.fillStyle = "rgba(255, 183, 122, 0.2)";
+      } else if (type === "puddle") {
+        ctx.fillStyle = "rgba(214, 235, 255, 0.18)";
       } else if (type === "memory") {
         ctx.fillStyle = "rgba(255, 226, 241, 0.34)";
       } else {
@@ -2381,121 +1946,97 @@
       ctx.stroke();
       ctx.setLineDash([]);
     }
-    if (type === "reveal") {
-      ctx.strokeStyle = "rgba(214, 251, 255, 0.4)";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 5]);
-      polygon([top, right, bottom, left], true);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
     ctx.restore();
   }
 
   function getTilePalette(type) {
     if (type === "wood") {
       return {
-        top: "#90714a",
-        left: "#5b432a",
-        right: "#6b5033",
-        stroke: "rgba(255, 241, 211, 0.12)"
+        top: "#53637a",
+        left: "#273244",
+        right: "#344257",
+        stroke: "rgba(233, 240, 255, 0.14)"
       };
     }
     if (type === "memory") {
       return {
-        top: "#f6a7d8",
-        left: "#9b4f7b",
-        right: "#b96692",
-        stroke: "rgba(255, 230, 244, 0.34)"
+        top: "#b9a7ff",
+        left: "#55498b",
+        right: "#6b5aa9",
+        stroke: "rgba(233, 226, 255, 0.3)"
       };
     }
     if (type === "ice") {
       return {
-        top: "#d4f4ff",
-        left: "#78b7cf",
-        right: "#95d0e3",
-        stroke: "rgba(247, 254, 255, 0.4)"
+        top: "#b7e6ff",
+        left: "#4f7992",
+        right: "#6794af",
+        stroke: "rgba(241, 252, 255, 0.4)"
       };
     }
-    if (type === "water") {
+    if (type === "puddle") {
       return {
-        top: "rgba(28, 105, 188, 0.64)",
-        left: "rgba(10, 41, 96, 0.82)",
-        right: "rgba(18, 66, 128, 0.8)",
-        stroke: "rgba(210, 235, 255, 0.24)"
-      };
-    }
-    if (type === "frozenWater") {
-      return {
-        top: "rgba(206, 243, 255, 0.94)",
-        left: "rgba(110, 169, 196, 0.88)",
-        right: "rgba(135, 194, 219, 0.9)",
-        stroke: "rgba(248, 254, 255, 0.4)"
+        top: "#5f86a6",
+        left: "#274866",
+        right: "#38617f",
+        stroke: "rgba(228, 240, 255, 0.2)"
       };
     }
     if (type === "melted") {
       return {
-        top: "#9d7f5a",
-        left: "#5f4930",
-        right: "#73593c",
-        stroke: "rgba(255, 212, 168, 0.18)"
+        top: "#5e6978",
+        left: "#2c3644",
+        right: "#3b4757",
+        stroke: "rgba(222, 229, 244, 0.14)"
       };
     }
     if (type === "shadow") {
       return {
-        top: "rgba(103, 124, 173, 0.58)",
-        left: "rgba(40, 52, 84, 0.5)",
-        right: "rgba(56, 70, 108, 0.52)",
-        stroke: "rgba(207, 228, 255, 0.18)"
-      };
-    }
-    if (type === "reveal") {
-      return {
-        top: "rgba(150, 239, 255, 0.82)",
-        left: "rgba(63, 126, 148, 0.74)",
-        right: "rgba(80, 156, 181, 0.76)",
-        stroke: "rgba(226, 251, 255, 0.3)"
+        top: "rgba(118, 136, 184, 0.62)",
+        left: "rgba(42, 52, 83, 0.54)",
+        right: "rgba(61, 72, 109, 0.58)",
+        stroke: "rgba(221, 232, 255, 0.2)"
       };
     }
     if (type === "altar") {
       return {
-        top: "#d1efb9",
-        left: "#557843",
-        right: "#678f51",
-        stroke: "rgba(255, 255, 255, 0.22)"
+        top: "#d5cfb1",
+        left: "#665f46",
+        right: "#7a7154",
+        stroke: "rgba(255, 248, 222, 0.22)"
       };
     }
     return {
-      top: "#6db681",
-      left: "#345742",
-      right: "#417054",
-      stroke: "rgba(223, 255, 229, 0.12)"
+      top: "#47576e",
+      left: "#243040",
+      right: "#313f52",
+      stroke: "rgba(225, 236, 255, 0.12)"
     };
   }
 
-  function drawGap(x, y, elevation) {
-    var point = isoPoint(x, y, (elevation || 0) - 4);
+  function drawGap(x, y) {
+    var point = isoPoint(x, y, -4);
     var top = { x: point.x, y: point.y - TILE_H * 0.48 };
     var right = { x: point.x + TILE_W * 0.48, y: point.y };
     var bottom = { x: point.x, y: point.y + TILE_H * 0.48 };
     var left = { x: point.x - TILE_W * 0.48, y: point.y };
     ctx.save();
-    ctx.fillStyle = "rgba(5, 8, 16, 0.92)";
+    ctx.fillStyle = "rgba(1, 3, 8, 0.96)";
     polygon([top, right, bottom, left]);
     ctx.fill();
-    ctx.strokeStyle = "rgba(116, 193, 163, 0.14)";
+    ctx.strokeStyle = "rgba(132, 157, 216, 0.16)";
     ctx.lineWidth = 1;
     polygon([top, right, bottom, left], true);
     ctx.stroke();
-    ctx.fillStyle = "rgba(163, 123, 255, 0.14)";
+    ctx.fillStyle = "rgba(140, 164, 255, 0.12)";
     ctx.beginPath();
     ctx.ellipse(point.x, point.y + 4, TILE_W * 0.18, TILE_H * 0.14, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  function drawWall(x, y, height, scale, kind, elevation) {
-    var point = isoPoint(x, y, (elevation || 0) + height);
+  function drawWall(x, y, height, scale, kind) {
+    var point = isoPoint(x, y, height);
     var top = diamond(point.x, point.y, TILE_W * scale, TILE_H * scale);
     var base = diamond(point.x, point.y + height, TILE_W * scale, TILE_H * scale);
     var palette = kind === "low"
@@ -2526,40 +2067,52 @@
     }
     ctx.save();
     ctx.globalAlpha = alpha;
-    drawWall(wall.x, wall.y, TALL_WALL_H, 0.92, "tall", wall.elevation || 0);
+    drawWall(wall.x, wall.y, TALL_WALL_H, 0.92, "tall");
     if (wall.shadow && wall.shadowUntil > state.lastTime) {
-      var point = isoPoint(wall.x, wall.y, (wall.elevation || 0) + TALL_WALL_H + 10);
+      var point = isoPoint(wall.x, wall.y, TALL_WALL_H + 10);
       ctx.fillStyle = "rgba(255, 245, 198, 0.16)";
       ctx.beginPath();
       ctx.arc(point.x, point.y - 8, 12, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    if (wall.reveal && wall.revealUntil > state.lastTime) {
-      var revealPoint = isoPoint(wall.x, wall.y, (wall.elevation || 0) + TALL_WALL_H + 18);
-      ctx.fillStyle = "rgba(178, 244, 255, 0.18)";
-      ctx.beginPath();
-      ctx.arc(revealPoint.x, revealPoint.y - 10, 10, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
   }
 
   function drawGoal(x, y) {
-    var point = isoPoint(x, y, getTileElevationAt(x, y) + 28);
+    var point = isoPoint(x, y, 28);
     ctx.save();
     ctx.shadowBlur = 20;
-    ctx.shadowColor = "rgba(244, 232, 178, 0.38)";
-    ctx.fillStyle = "#f4e8b2";
-    ctx.font = "700 34px Noto Serif SC, serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("明", point.x, point.y);
+    ctx.shadowColor = "rgba(207, 247, 211, 0.4)";
+    ctx.fillStyle = "#d7f7b8";
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y - 20);
+    ctx.lineTo(point.x + 12, point.y + 8);
+    ctx.lineTo(point.x, point.y + 18);
+    ctx.lineTo(point.x - 12, point.y + 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawLamp(lamp) {
+    var point = isoPoint(lamp.x, lamp.y, 44);
+    ctx.save();
+    ctx.shadowBlur = 26;
+    ctx.shadowColor = "rgba(255, 209, 122, 0.5)";
+    ctx.fillStyle = "rgba(255, 220, 158, 0.96)";
+    ctx.beginPath();
+    ctx.arc(point.x, point.y - 4, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 196, 118, 0.22)";
+    ctx.beginPath();
+    ctx.ellipse(point.x, point.y + 10, 28, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 
   function drawPlayer() {
     var pos = getPlayerInterpolatedPosition();
-    var point = isoPoint(pos.x, pos.y, (pos.z || 0) + 26);
+    var point = isoPoint(pos.x, pos.y, 26);
     var fallScale = state.player.falling ? Math.max(0.3, 1 - state.player.fallT * 1.2) : 1;
     var fallAlpha = state.player.falling ? Math.max(0.18, 1 - state.player.fallT * 1.4) : 1;
 
@@ -2615,8 +2168,8 @@
       return;
     }
 
-    var start = isoPoint(state.beam.fromX, state.beam.fromY, getTileElevationAt(state.beam.fromX, state.beam.fromY) + 24);
-    var end = isoPoint(state.beam.toX, state.beam.toY, getTileElevationAt(Math.round(state.beam.toX), Math.round(state.beam.toY)) + 30);
+    var start = isoPoint(state.beam.fromX, state.beam.fromY, 24);
+    var end = isoPoint(state.beam.toX, state.beam.toY, 30);
     var alpha = Math.max(0, state.beam.ttl / 0.26);
 
     ctx.save();
@@ -2628,6 +2181,19 @@
     ctx.moveTo(start.x, start.y);
     ctx.lineTo(end.x, end.y);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLightningFlash() {
+    if (state.lightningBlindUntil <= state.lastTime) {
+      return;
+    }
+    var remaining = state.lightningBlindUntil - state.lastTime;
+    var alpha = Math.max(0.16, Math.min(0.92, remaining / 1));
+    ctx.save();
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = "rgba(255, 255, 255, " + String(alpha) + ")";
+    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.restore();
   }
 
@@ -2667,9 +2233,6 @@
 
   function update(dt, now) {
     state.lastTime = now;
-    if (state.intro.active) {
-      updateIntro(now);
-    }
     if (state.started) {
       if (!state.runStartedAt) {
         state.runStartedAt = now;
@@ -2681,7 +2244,6 @@
     if (state.started) {
       updateMemoryTiles(now);
       updateShadowTiles(now);
-      updateRevealTiles(now);
       updatePlayer(dt);
       updateBeam(dt);
     }
@@ -2696,62 +2258,7 @@
   }
 
   function isShadowPuzzleBlocked() {
-    return countFrozenWaterGroups() > 0 && (
-      countActivatedShadowWalls() < world.shadowCount ||
-      countActivatedRevealWalls() < world.revealCount
-    );
-  }
-
-  function handleIntroKeydown(event) {
-    if (event.repeat) {
-      return true;
-    }
-
-    if (event.key === "Escape") {
-      skipIntro();
-      return true;
-    }
-
-    if (state.intro.phase === "entry" && event.key === "Enter") {
-      beginStage();
-      return true;
-    }
-
-    if (
-      state.intro.phase === "street" ||
-      state.intro.phase === "shadow-sense"
-    ) {
-      if (
-        event.key === "ArrowUp" ||
-        event.key === "ArrowDown" ||
-        event.key === "ArrowLeft" ||
-        event.key === "ArrowRight" ||
-        event.key === "w" ||
-        event.key === "W" ||
-        event.key === "a" ||
-        event.key === "A" ||
-        event.key === "s" ||
-        event.key === "S" ||
-        event.key === "d" ||
-        event.key === "D" ||
-        event.key === " "
-      ) {
-        advanceIntroByMove();
-        return true;
-      }
-    }
-
-    if (state.intro.phase === "light-touch" && (event.key === "Enter" || event.key === " ")) {
-      triggerIntroLightTouch();
-      return true;
-    }
-
-    if (state.intro.phase === "tower-reveal" && (event.key === "Enter" || event.key === " ")) {
-      finishIntroAndStartStage();
-      return true;
-    }
-
-    return true;
+    return countMeltedIceGroups() > 0 && state.shadowTriggered < 1;
   }
 
   function loop(nowMs) {
@@ -2766,13 +2273,19 @@
   }
 
   function handleKeydown(event) {
-    if (state.intro.active) {
-      if (handleIntroKeydown(event)) {
+    if (!state.started) {
+      var isTypingName = document.activeElement === startNameInput;
+      if (startModal.classList.contains("is-visible") && event.key === "Enter") {
+        if (state.intro.step === INTRO_STEPS.length - 1) {
+          beginStage();
+        } else {
+          advanceIntroStep();
+        }
+        event.preventDefault();
+      } else if (startModal.classList.contains("is-visible") && event.key === " " && !isTypingName) {
+        advanceIntroStep();
         event.preventDefault();
       }
-      return;
-    }
-    if (!state.started) {
       return;
     }
     if (event.repeat) {
@@ -2813,8 +2326,8 @@
       event.preventDefault();
       return;
     }
-    if (event.key === "4") {
-      castFreeze();
+    if (event.key === "g" || event.key === "G") {
+      castLight();
       event.preventDefault();
       return;
     }
@@ -2823,24 +2336,18 @@
       event.preventDefault();
       return;
     }
-    if (event.key === "e" || event.key === "E") {
-      castPierce();
-      event.preventDefault();
-      return;
-    }
   }
 
   shatterChip.addEventListener("click", castShatter);
   memoryChip.addEventListener("click", castMemory);
   fireChip.addEventListener("click", castFire);
-  freezeChip.addEventListener("click", castFreeze);
+  lightChip.addEventListener("click", castLight);
   flashChip.addEventListener("click", castFlashlight);
-  pierceChip.addEventListener("click", castPierce);
-  startGameButton.addEventListener("click", beginStage);
-  introActionButton.addEventListener("click", triggerIntroLightTouch);
-  introContinueButton.addEventListener("click", advanceIntroByMove);
-  introFinishButton.addEventListener("click", finishIntroAndStartStage);
+  introActionButton.addEventListener("click", advanceIntroStep);
+  introContinueButton.addEventListener("click", advanceIntroStep);
+  introFinishButton.addEventListener("click", advanceIntroStep);
   introSkipButton.addEventListener("click", skipIntro);
+  startGameButton.addEventListener("click", beginStage);
   resetHonorButton.addEventListener("click", resetLeaderboard);
   nextStageButton.addEventListener("click", goNextStage);
   homeButton.addEventListener("click", goHome);
@@ -2858,9 +2365,8 @@
   window.addEventListener("keydown", handleKeydown);
 
   resizeCanvas();
-  setIntroActive(true);
-  updateIntroDom();
-  startNameInput.focus();
+  renderIntroStep();
+  introActionButton.focus();
   refreshHonorBoard();
   updateTimerDisplay();
   refreshContextHint();
