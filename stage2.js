@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   var canvas = document.getElementById("stageCanvas");
   var ctx = canvas.getContext("2d");
   var objectiveText = document.getElementById("objectiveText");
@@ -10,6 +10,18 @@
   var startNameInput = document.getElementById("startNameInput");
   var startError = document.getElementById("startError");
   var startGameButton = document.getElementById("startGameButton");
+  var introMeta = document.getElementById("introMeta");
+  var introGlyph = document.getElementById("introGlyph");
+  var introLinePrimary = document.getElementById("introLinePrimary");
+  var introLineSecondary = document.getElementById("introLineSecondary");
+  var introEntry = document.getElementById("introEntry");
+  var introPrompt = document.getElementById("introPrompt");
+  var introWorldline = document.getElementById("introWorldline");
+  var introActionButton = document.getElementById("introActionButton");
+  var introContinueButton = document.getElementById("introContinueButton");
+  var introFinishButton = document.getElementById("introFinishButton");
+  var introSkipButton = document.getElementById("introSkipButton");
+  var introFloatingActions = document.getElementById("introFloatingActions");
   var timerText = document.getElementById("timerText");
   var honorList = document.getElementById("honorList");
   var resetHonorButton = document.getElementById("resetHonorButton");
@@ -60,6 +72,7 @@
     runStartedAt: 0,
     elapsed: 0,
     playerName: "",
+    intro: createIntroState(),
     player: {
       x: world.start.x,
       y: world.start.y,
@@ -306,6 +319,125 @@
     return motes;
   }
 
+  function createIntroState() {
+    return {
+      active: true,
+      phase: "entry",
+      phaseStartedAt: 0,
+      nameLocked: false,
+      rewriteFlashUntil: 0
+    };
+  }
+
+  function setIntroActive(active) {
+    state.intro.active = active;
+    document.body.classList.toggle("intro-active", active);
+    if (!active) {
+      startModal.classList.remove("is-visible");
+      startModal.setAttribute("aria-hidden", "true");
+      return;
+    }
+    startModal.classList.add("is-visible");
+    startModal.setAttribute("aria-hidden", "false");
+  }
+
+  function setIntroPhase(phase) {
+    state.intro.phase = phase;
+    state.intro.phaseStartedAt = state.lastTime;
+    updateIntroDom();
+  }
+
+  function updateIntroDom() {
+    var phase = state.intro.phase;
+    var showEntry = phase === "entry";
+    var showAction = phase === "light-touch";
+    var showContinue = phase === "street" || phase === "shadow-sense";
+    var showFinish = phase === "tower-reveal";
+
+    introEntry.classList.toggle("is-hidden", !showEntry);
+    introEntry.hidden = !showEntry;
+    introActionButton.hidden = !showAction;
+    introContinueButton.hidden = !showContinue;
+    introFinishButton.hidden = !showFinish;
+    introFloatingActions.classList.toggle("is-hidden", !(showAction || showContinue || showFinish));
+
+    if (phase === "entry") {
+      introMeta.textContent = "意识坠落中";
+      introGlyph.textContent = "影";
+      introGlyph.className = "dream-intro__glyph is-shadow";
+      introLinePrimary.textContent = "写下名字，然后坠入迟夜的意识世界。";
+      introLineSecondary.textContent = "这里的字不是描述。字本身，就是规则。";
+      introPrompt.textContent = "按下“坠入梦中”，进入第二关前的引导式梦境。";
+      introWorldline.textContent = "迟夜患有严重夜盲症。夜晚里，光会失焦，黑暗会吞没方向。";
+      return;
+    }
+
+    if (phase === "falling") {
+      introMeta.textContent = "世界失重";
+      introGlyph.textContent = "影";
+      introGlyph.className = "dream-intro__glyph is-shadow";
+      introLinePrimary.textContent = "整个世界开始缓慢下坠。";
+      introLineSecondary.textContent = "岛屿、光点与汉字被拉成长线，像意识正在失去重量。";
+      introPrompt.textContent = "空间正在坠入迟夜的梦中。";
+      introWorldline.textContent = "这不是剧情提示。你正在被带入一个由汉字规则构成的意识世界。";
+      return;
+    }
+
+    if (phase === "street") {
+      introMeta.textContent = "现实 / 深夜街道";
+      introGlyph.textContent = "夜";
+      introGlyph.className = "dream-intro__glyph";
+      introLinePrimary.textContent = "他总是看不清夜晚。";
+      introLineSecondary.textContent = "霓虹拖成光斑，边界被黑暗吞没。继续向前，陪迟夜走进失焦的街道。";
+      introPrompt.textContent = "按方向键或点击“继续向前”。";
+      introWorldline.textContent = "他曾以为：看不见的人，本就不该前进。";
+      return;
+    }
+
+    if (phase === "light-touch") {
+      introMeta.textContent = "规则初次显形";
+      introGlyph.textContent = "光";
+      introGlyph.className = "dream-intro__glyph is-light";
+      introLinePrimary.textContent = "地面缓慢浮现了「光」。";
+      introLineSecondary.textContent = "靠近它。不是为了照亮，而是为了改写世界的结构。";
+      introPrompt.textContent = "点击“触碰「光」”，重写一次世界规则。";
+      introWorldline.textContent = "在这里，文字不描述世界。文字本身，就是世界。";
+      return;
+    }
+
+    if (phase === "light-rewrite") {
+      introMeta.textContent = "规则被改写";
+      introGlyph.textContent = "光";
+      introGlyph.className = "dream-intro__glyph is-light";
+      introLinePrimary.textContent = "隐藏的结构被重新定义。";
+      introLineSecondary.textContent = "平台从黑暗里浮现，轮廓被光重新书写。迟夜第一次意识到，自己能触碰规则。";
+      introPrompt.textContent = "世界正在被重构。";
+      introWorldline.textContent = "字不是解释。字就是命令。";
+      return;
+    }
+
+    if (phase === "shadow-sense") {
+      introMeta.textContent = "影 / 感知仍在";
+      introGlyph.textContent = "影";
+      introGlyph.className = "dream-intro__glyph is-shadow";
+      introLinePrimary.textContent = "原来不是所有东西，都需要被照亮。";
+      introLineSecondary.textContent = "继续向前。就算光熄灭，阴影里依然藏着边缘、回声与结构。";
+      introPrompt.textContent = "按方向键或点击“继续向前”，进入影的理解。";
+      introWorldline.textContent = "黑暗并非空无。它只是另一种感知的开始。";
+      return;
+    }
+
+    if (phase === "tower-reveal") {
+      introMeta.textContent = "失重回廊";
+      introGlyph.textContent = "明";
+      introGlyph.className = "dream-intro__glyph is-tower";
+      introLinePrimary.textContent = "也许黑暗从来不是敌人。";
+      introLineSecondary.textContent = "镜头升起。迟夜终于看见那座漂浮于光与影之间的遗迹塔，也看见自己能够改写它。";
+      introPrompt.textContent = "点击“进入回廊”，正式开始第二关。";
+      introWorldline.textContent = "光、影、忆、碎在塔外缓慢旋转。规则开始流动，你也将获得控制权。";
+    }
+  }
+
   function getPlayerName() {
     var raw = (playerNameInput.value || "").trim();
     return raw || "游客";
@@ -439,24 +571,83 @@
 
     startError.textContent = "";
     syncPlayerName(name);
+    playerNameInput.readOnly = true;
+    state.intro.nameLocked = true;
+    setIntroPhase("falling");
+  }
+
+  function finishIntroAndStartStage() {
+    setIntroActive(false);
     state.started = true;
     state.runStartedAt = 0;
     state.elapsed = 0;
-    startModal.classList.remove("is-visible");
-    startModal.setAttribute("aria-hidden", "true");
-    playerNameInput.readOnly = true;
     canvas.focus();
 
     if (enteredFromHome) {
-      setToast("你已从首页进入 Stage 2。输入名字后的计时已经开始，这张三层回廊里会连续遇到深蓝水面、浅蓝冰面、下照影路和透壁通路。");
+      setToast("迟夜已坠入意识回廊。方向键前进；按 1【碎】、2【忆】、3【火】、4【冰】、F【影】、E【透】。");
       window.sessionStorage.removeItem("yanling-stage-entry");
       enteredFromHome = false;
     } else {
-      setToast("试炼开始。方向键/WASD 按屏幕方向移动；按 1【碎】、2【忆】、3【火】、4【冰】、F【影】、E【透】。");
+      setToast("梦境边界已经打开。方向键前进；按 1【碎】、2【忆】、3【火】、4【冰】、F【影】、E【透】。");
     }
 
     refreshContextHint();
     updateObjective();
+  }
+
+  function advanceIntroByMove() {
+    if (state.intro.phase === "street") {
+      setIntroPhase("light-touch");
+      return true;
+    }
+    if (state.intro.phase === "shadow-sense") {
+      setIntroPhase("tower-reveal");
+      return true;
+    }
+    return false;
+  }
+
+  function triggerIntroLightTouch() {
+    if (state.intro.phase !== "light-touch") {
+      return;
+    }
+    state.intro.rewriteFlashUntil = state.lastTime + 1.2;
+    setIntroPhase("light-rewrite");
+  }
+
+  function skipIntro() {
+    var name = (startNameInput.value || "").trim();
+    if (!state.intro.nameLocked) {
+      if (!name) {
+        startError.textContent = "至少留下一个名字，再进入回廊。";
+        startNameInput.focus();
+        return;
+      }
+      startError.textContent = "";
+      syncPlayerName(name);
+      state.intro.nameLocked = true;
+    }
+    finishIntroAndStartStage();
+  }
+
+  function updateIntro(now) {
+    if (!state.intro.active) {
+      return;
+    }
+
+    if (!state.intro.phaseStartedAt) {
+      state.intro.phaseStartedAt = now;
+      updateIntroDom();
+    }
+
+    var elapsed = now - state.intro.phaseStartedAt;
+    if (state.intro.phase === "falling" && elapsed > 3.8) {
+      setIntroPhase("street");
+      return;
+    }
+    if (state.intro.phase === "light-rewrite" && elapsed > 2.8) {
+      setIntroPhase("shadow-sense");
+    }
   }
 
   function spawnFireBurst(centerX, centerY) {
@@ -1390,6 +1581,12 @@
     var height = window.innerHeight;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.clearRect(0, 0, width, height);
+
+    if (state.intro.active) {
+      drawIntroScene(time, width, height);
+      return;
+    }
+
     updateCamera(width, height);
 
     drawBackground(width, height, time);
@@ -1403,6 +1600,291 @@
     drawWorldPrompt();
     drawFireBursts();
     drawBeam(time);
+  }
+
+  function drawIntroScene(time, width, height) {
+    var phase = state.intro.phase;
+    drawIntroBackdrop(width, height, time, phase);
+
+    if (phase === "entry" || phase === "falling") {
+      drawIntroFallingScene(width, height, time);
+    } else if (phase === "street" || phase === "light-touch" || phase === "light-rewrite") {
+      drawIntroStreetScene(width, height, time, phase);
+    } else if (phase === "shadow-sense") {
+      drawIntroShadowScene(width, height, time);
+    } else if (phase === "tower-reveal") {
+      drawIntroTowerScene(width, height, time);
+    }
+
+    if (state.intro.rewriteFlashUntil > time) {
+      var flashAlpha = Math.max(0, (state.intro.rewriteFlashUntil - time) / 1.2);
+      ctx.save();
+      ctx.fillStyle = "rgba(247, 240, 188, " + String(flashAlpha * 0.34) + ")";
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+
+    drawIntroVignette(width, height);
+  }
+
+  function drawIntroBackdrop(width, height, time, phase) {
+    var gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, phase === "street" ? "#101320" : "#060a14");
+    gradient.addColorStop(0.48, phase === "tower-reveal" ? "#091120" : "#05070e");
+    gradient.addColorStop(1, "#020309");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.save();
+    floatingMotes.forEach(function (mote, index) {
+      var x = mote.x * width + Math.sin(time * (0.18 + mote.speed) + index) * 26;
+      var y = mote.y * height + Math.cos(time * (0.12 + mote.speed) + index * 1.4) * 22;
+      ctx.fillStyle = "rgba(228, 238, 255, " + String(Math.min(0.32, mote.alpha * 0.8)) + ")";
+      ctx.beginPath();
+      ctx.arc(x, y, mote.r * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawIntroFallingScene(width, height, time) {
+    var i;
+    ctx.save();
+    for (i = 0; i < 18; i += 1) {
+      var progress = (time * 0.12 + i * 0.07) % 1;
+      var x = width * (0.1 + (i % 7) * 0.12) + Math.sin(time * 0.8 + i) * 60;
+      var y = -height * 0.15 + progress * height * 1.3;
+      var length = 110 + (i % 4) * 48;
+      ctx.strokeStyle = i % 3 === 0 ? "rgba(113, 184, 255, 0.18)" : "rgba(244, 232, 178, 0.1)";
+      ctx.lineWidth = 1 + (i % 3);
+      ctx.beginPath();
+      ctx.moveTo(x, y - length);
+      ctx.lineTo(x + 18, y + length);
+      ctx.stroke();
+    }
+
+    ["光", "影", "忆", "碎", "夜"].forEach(function (glyph, index) {
+      ctx.font = "700 " + String(44 + index * 8) + "px Noto Serif SC, serif";
+      ctx.fillStyle = "rgba(231, 240, 255, " + String(0.06 + index * 0.02) + ")";
+      ctx.fillText(
+        glyph,
+        width * (0.16 + index * 0.18) + Math.sin(time * 0.5 + index) * 34,
+        height * (0.18 + (index % 2) * 0.22) + Math.cos(time * 0.6 + index) * 26
+      );
+    });
+
+    for (i = 0; i < 6; i += 1) {
+      var px = width * (0.1 + i * 0.16) + Math.sin(time * 0.46 + i) * 28;
+      var py = height * (0.62 + (i % 2) * 0.08) + Math.cos(time * 0.5 + i) * 18;
+      ctx.fillStyle = "rgba(20, 28, 46, 0.64)";
+      ctx.beginPath();
+      ctx.moveTo(px, py - 18);
+      ctx.lineTo(px + 48, py + 8);
+      ctx.lineTo(px, py + 34);
+      ctx.lineTo(px - 48, py + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(178, 212, 255, 0.08)";
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawIntroStreetScene(width, height, time, phase) {
+    var roadTop = height * 0.36;
+    var roadBottom = height * 0.98;
+
+    ctx.save();
+    ctx.filter = "blur(18px)";
+    [
+      { x: width * 0.18, y: height * 0.28, r: 110, c: "rgba(78, 160, 255, 0.22)" },
+      { x: width * 0.34, y: height * 0.22, r: 86, c: "rgba(255, 130, 176, 0.16)" },
+      { x: width * 0.72, y: height * 0.2, r: 120, c: "rgba(120, 255, 225, 0.14)" },
+      { x: width * 0.86, y: height * 0.3, r: 78, c: "rgba(255, 208, 132, 0.14)" }
+    ].forEach(function (light, index) {
+      ctx.fillStyle = light.c;
+      ctx.beginPath();
+      ctx.arc(light.x + Math.sin(time * 0.4 + index) * 18, light.y, light.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(9, 13, 24, 0.92)";
+    ctx.beginPath();
+    ctx.moveTo(width * 0.2, roadTop);
+    ctx.lineTo(width * 0.8, roadTop);
+    ctx.lineTo(width * 0.64, roadBottom);
+    ctx.lineTo(width * 0.36, roadBottom);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = "rgba(103, 149, 214, 0.2)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(width * 0.5, roadTop + 26);
+    ctx.lineTo(width * 0.5 + Math.sin(time * 0.7) * 12, roadBottom - 20);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(21, 31, 47, 0.78)";
+    ctx.fillRect(width * 0.1, height * 0.26, 70, height * 0.46);
+    ctx.fillRect(width * 0.74, height * 0.18, 110, height * 0.54);
+    ctx.fillRect(width * 0.54, height * 0.14, 80, height * 0.48);
+    ctx.restore();
+
+    ctx.save();
+    ctx.filter = "blur(22px)";
+    ctx.fillStyle = "rgba(198, 225, 255, 0.08)";
+    ctx.fillRect(width * 0.34, height * 0.72, width * 0.32, 80);
+    ctx.restore();
+
+    if (phase === "light-touch" || phase === "light-rewrite") {
+      var glyphY = height * 0.64 + Math.sin(time * 1.4) * 6;
+      ctx.save();
+      ctx.font = "700 120px Noto Serif SC, serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowBlur = phase === "light-rewrite" ? 64 : 34;
+      ctx.shadowColor = phase === "light-rewrite" ? "rgba(244, 232, 178, 0.4)" : "rgba(143, 231, 255, 0.18)";
+      ctx.fillStyle = phase === "light-rewrite" ? "rgba(247, 240, 188, 0.86)" : "rgba(198, 232, 255, 0.54)";
+      ctx.fillText("光", width * 0.5, glyphY);
+      ctx.restore();
+
+      if (phase === "light-rewrite") {
+        ctx.save();
+        ctx.strokeStyle = "rgba(247, 240, 188, 0.16)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(width * 0.32, height * 0.58);
+        ctx.lineTo(width * 0.46, height * 0.5);
+        ctx.lineTo(width * 0.62, height * 0.54);
+        ctx.lineTo(width * 0.72, height * 0.44);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    drawIntroFigure(width * 0.5, height * 0.78, time, phase !== "light-rewrite");
+  }
+
+  function drawIntroShadowScene(width, height, time) {
+    ctx.save();
+    ctx.fillStyle = "rgba(4, 7, 14, 0.92)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(190, 216, 255, 0.08)";
+    ctx.lineWidth = 1.4;
+    [
+      [0.2, 0.62, 0.4, 0.44],
+      [0.42, 0.52, 0.58, 0.42],
+      [0.54, 0.64, 0.76, 0.48],
+      [0.32, 0.8, 0.68, 0.8]
+    ].forEach(function (line, index) {
+      ctx.globalAlpha = 0.55 + Math.sin(time * 0.7 + index) * 0.12;
+      ctx.beginPath();
+      ctx.moveTo(width * line[0], height * line[1]);
+      ctx.lineTo(width * line[2], height * line[3]);
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(213, 226, 255, 0.12)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(width * 0.5, height * 0.76, 54 + Math.sin(time * 2.4) * 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    drawIntroFigure(width * 0.5, height * 0.78, time, true);
+  }
+
+  function drawIntroTowerScene(width, height, time) {
+    var cx = width * 0.52;
+    var cy = height * 0.58;
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    ctx.fillStyle = "rgba(16, 25, 40, 0.92)";
+    ctx.beginPath();
+    ctx.moveTo(-100, 120);
+    ctx.lineTo(-36, -160);
+    ctx.lineTo(54, -160);
+    ctx.lineTo(120, 120);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(208, 226, 255, 0.14)";
+    ctx.lineWidth = 2;
+    [-120, -50, 20, 90].forEach(function (y) {
+      ctx.beginPath();
+      ctx.ellipse(10, y, 96 - y * -0.1, 20, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    ctx.fillStyle = "rgba(244, 232, 178, 0.14)";
+    ctx.beginPath();
+    ctx.arc(6, -156, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ["光", "影", "忆", "碎"].forEach(function (glyph, index) {
+      var angle = time * 0.36 + index * (Math.PI / 2);
+      var gx = cx + Math.cos(angle) * 220;
+      var gy = cy - 70 + Math.sin(angle) * 110;
+      ctx.save();
+      ctx.translate(gx, gy);
+      ctx.rotate(Math.sin(time * 0.2 + index) * 0.14);
+      ctx.font = "700 " + String(58 - index * 4) + "px Noto Serif SC, serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = index % 2 === 0 ? "rgba(207, 236, 255, 0.28)" : "rgba(244, 232, 178, 0.24)";
+      ctx.shadowBlur = 24;
+      ctx.shadowColor = index % 2 === 0 ? "rgba(143, 231, 255, 0.2)" : "rgba(244, 232, 178, 0.18)";
+      ctx.fillText(glyph, 0, 0);
+      ctx.restore();
+    });
+  }
+
+  function drawIntroFigure(x, y, time, hesitant) {
+    ctx.save();
+    ctx.translate(x + Math.sin(time * 0.7) * (hesitant ? 2 : 6), y);
+    ctx.globalAlpha = 0.92;
+    ctx.fillStyle = "rgba(8, 12, 22, 0.96)";
+    ctx.beginPath();
+    ctx.arc(0, -48, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-16, -26);
+    ctx.lineTo(16, -26);
+    ctx.lineTo(24, 34);
+    ctx.lineTo(-24, 34);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(206, 222, 255, 0.08)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-8, 34);
+    ctx.lineTo(-14, 86);
+    ctx.moveTo(10, 34);
+    ctx.lineTo(18, 84);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawIntroVignette(width, height) {
+    var vignette = ctx.createRadialGradient(width * 0.5, height * 0.52, width * 0.08, width * 0.5, height * 0.52, width * 0.7);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.62)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, width, height);
   }
 
   function drawBackground(width, height, time) {
@@ -2185,6 +2667,9 @@
 
   function update(dt, now) {
     state.lastTime = now;
+    if (state.intro.active) {
+      updateIntro(now);
+    }
     if (state.started) {
       if (!state.runStartedAt) {
         state.runStartedAt = now;
@@ -2217,6 +2702,58 @@
     );
   }
 
+  function handleIntroKeydown(event) {
+    if (event.repeat) {
+      return true;
+    }
+
+    if (event.key === "Escape") {
+      skipIntro();
+      return true;
+    }
+
+    if (state.intro.phase === "entry" && event.key === "Enter") {
+      beginStage();
+      return true;
+    }
+
+    if (
+      state.intro.phase === "street" ||
+      state.intro.phase === "shadow-sense"
+    ) {
+      if (
+        event.key === "ArrowUp" ||
+        event.key === "ArrowDown" ||
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight" ||
+        event.key === "w" ||
+        event.key === "W" ||
+        event.key === "a" ||
+        event.key === "A" ||
+        event.key === "s" ||
+        event.key === "S" ||
+        event.key === "d" ||
+        event.key === "D" ||
+        event.key === " "
+      ) {
+        advanceIntroByMove();
+        return true;
+      }
+    }
+
+    if (state.intro.phase === "light-touch" && (event.key === "Enter" || event.key === " ")) {
+      triggerIntroLightTouch();
+      return true;
+    }
+
+    if (state.intro.phase === "tower-reveal" && (event.key === "Enter" || event.key === " ")) {
+      finishIntroAndStartStage();
+      return true;
+    }
+
+    return true;
+  }
+
   function loop(nowMs) {
     if (!state.lastTime) {
       state.lastTime = nowMs / 1000;
@@ -2229,11 +2766,13 @@
   }
 
   function handleKeydown(event) {
-    if (!state.started) {
-      if (event.key === "Enter" && startModal.classList.contains("is-visible")) {
-        beginStage();
+    if (state.intro.active) {
+      if (handleIntroKeydown(event)) {
         event.preventDefault();
       }
+      return;
+    }
+    if (!state.started) {
       return;
     }
     if (event.repeat) {
@@ -2298,6 +2837,10 @@
   flashChip.addEventListener("click", castFlashlight);
   pierceChip.addEventListener("click", castPierce);
   startGameButton.addEventListener("click", beginStage);
+  introActionButton.addEventListener("click", triggerIntroLightTouch);
+  introContinueButton.addEventListener("click", advanceIntroByMove);
+  introFinishButton.addEventListener("click", finishIntroAndStartStage);
+  introSkipButton.addEventListener("click", skipIntro);
   resetHonorButton.addEventListener("click", resetLeaderboard);
   nextStageButton.addEventListener("click", goNextStage);
   homeButton.addEventListener("click", goHome);
@@ -2315,6 +2858,8 @@
   window.addEventListener("keydown", handleKeydown);
 
   resizeCanvas();
+  setIntroActive(true);
+  updateIntroDom();
   startNameInput.focus();
   refreshHonorBoard();
   updateTimerDisplay();

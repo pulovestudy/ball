@@ -110,58 +110,31 @@
 
     <div class="toast" id="toast"></div>
 
-    <section class="start-modal is-visible" id="startModal" aria-hidden="false">
-      <div class="start-card">
-        <small>Stage 2 Entry</small>
-        <h2>输入名字后进入失重回廊</h2>
-        <p>第二关改回第一关同款 2.5D 菱形地图。先输入名字，再进入由阴影桥、透路、水面与透明地面组成的新试炼。</p>
-        <label class="player-label" for="startNameInput">玩家名</label>
-        <input class="player-input start-input" id="startNameInput" type="text" maxlength="16" placeholder="请输入玩家名" />
-        <div class="start-abilities">
-          <div class="start-ability">
-            <span>1</span>
-            <strong>碎</strong>
-            <small>击碎矮墙</small>
-          </div>
-          <div class="start-ability">
-            <span>2</span>
-            <strong>忆</strong>
-            <small>恢复透明地面</small>
-          </div>
-          <div class="start-ability">
-            <span>3</span>
-            <strong>火</strong>
-            <small>烧掉冰面</small>
-          </div>
-          <div class="start-ability">
-            <span>4</span>
-            <strong>冰</strong>
-            <small>冻结水面</small>
-          </div>
-          <div class="start-ability">
-            <span>F</span>
-            <strong>影</strong>
-            <small>照出 4 秒阴影路径</small>
-          </div>
-          <div class="start-ability">
-            <span>E</span>
-            <strong>透</strong>
-            <small>照出 4 秒临时通路</small>
+    <section class="start-modal dream-intro is-visible" id="startModal" aria-hidden="false">
+      <div class="dream-intro__noise"></div>
+      <div class="dream-intro__frame">
+        <div class="dream-intro__meta" id="introMeta">意识坠落中</div>
+        <div class="dream-intro__glyph is-shadow" id="introGlyph">影</div>
+        <div class="dream-intro__copy">
+          <p class="dream-intro__line dream-intro__line--primary" id="introLinePrimary">写下名字，然后坠入迟夜的意识世界。</p>
+          <p class="dream-intro__line dream-intro__line--secondary" id="introLineSecondary">这里的字不是描述。字本身，就是规则。</p>
+        </div>
+        <div class="dream-intro__entry" id="introEntry">
+          <label class="player-label dream-intro__label" for="startNameInput">写下他的名字</label>
+          <input class="player-input start-input dream-intro__input" id="startNameInput" type="text" maxlength="16" placeholder="迟夜" />
+          <p class="start-error dream-intro__error" id="startError"></p>
+          <div class="dream-intro__actions">
+            <button class="modal-button dream-intro__button" id="startGameButton" type="button">坠入梦中</button>
           </div>
         </div>
-        <div class="start-help">
-          <small>操作说明</small>
-          <ul>
-            <li>移动：WASD / 方向键，按屏幕方向走</li>
-            <li>靠近障碍后再用技能，阴影路与透路会在 4 秒后消失</li>
-            <li>透明蓝水面必须先冻结，否则踏上去就会坠落</li>
-            <li>最终平台中央的「明」字是本关终点</li>
-          </ul>
+        <div class="dream-intro__actions dream-intro__actions--floating" id="introFloatingActions">
+          <button class="modal-button dream-intro__button" id="introActionButton" type="button" hidden>触碰「光」</button>
+          <button class="modal-button dream-intro__button dream-intro__button--ghost" id="introContinueButton" type="button" hidden>继续向前</button>
+          <button class="modal-button dream-intro__button dream-intro__button--ghost" id="introFinishButton" type="button" hidden>进入回廊</button>
         </div>
-        <p class="start-error" id="startError"></p>
-        <div class="start-actions">
-          <button class="modal-button" id="startGameButton" type="button">开始游戏</button>
-        </div>
+        <div class="dream-intro__prompt" id="introPrompt">按下“坠入梦中”，进入第二关前的意识梦境。</div>
+        <div class="dream-intro__worldline" id="introWorldline">迟夜患有严重夜盲症。夜晚里，光会失焦，黑暗会吞没方向。</div>
+        <button class="dream-intro__skip" id="introSkipButton" type="button">跳过演出</button>
       </div>
     </section>
 
