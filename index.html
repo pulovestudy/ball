@@ -94,43 +94,11 @@
     }
 
     .topbar {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
+      display: flex;
+      justify-content: flex-end;
       align-items: start;
       position: relative;
       z-index: 8;
-    }
-
-    .top-info {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .chip {
-      padding: 12px 16px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(32, 35, 58, 0.8), rgba(21, 24, 40, 0.66));
-      border: 1px solid var(--line);
-      box-shadow: 0 18px 40px -30px var(--shadow);
-      backdrop-filter: blur(18px);
-    }
-
-    .chip span {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: rgba(232, 225, 255, 0.54);
-    }
-
-    .chip strong {
-      display: block;
-      margin-top: 4px;
-      color: var(--white);
-      font-size: 15px;
-      letter-spacing: 0.06em;
     }
 
     .runes {
@@ -351,30 +319,51 @@
     }
 
     .title-panel {
-      left: 28px;
-      top: 28px;
-      width: min(420px, calc(100% - 56px));
-      padding: 22px 22px 18px;
+      left: 24px;
+      top: 24px;
+      bottom: auto;
+      width: min(360px, calc(100% - 460px));
+      padding: 14px 18px 14px;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(36, 40, 68, 0.52), rgba(18, 20, 34, 0.34)),
+        radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.08), transparent 28%);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 20px 38px -34px var(--shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+    }
+
+    .title-panel::before {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      pointer-events: none;
     }
 
     .eyebrow {
+      position: relative;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 10px;
+      padding: 5px 9px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      color: rgba(232, 225, 255, 0.78);
-      font-size: 11px;
-      letter-spacing: 0.16em;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(232, 225, 255, 0.72);
+      font-size: 10px;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
     }
 
     .title-panel h1 {
-      margin: 16px 0 10px;
-      font-size: clamp(44px, 7vw, 80px);
-      line-height: 0.9;
-      letter-spacing: 0.12em;
+      position: relative;
+      margin: 12px 0 8px;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 0.92;
+      letter-spacing: 0.1em;
       color: var(--white);
       text-shadow:
         0 0 20px rgba(214, 240, 255, 0.14),
@@ -382,15 +371,17 @@
     }
 
     .title-panel p {
+      position: relative;
       margin: 0;
-      color: var(--ink-soft);
-      font-size: 14px;
-      line-height: 1.7;
-      max-width: 34ch;
+      color: rgba(232, 225, 255, 0.74);
+      font-size: 12px;
+      line-height: 1.62;
+      max-width: 31ch;
     }
 
     .actions {
-      margin-top: 16px;
+      position: relative;
+      margin-top: 14px;
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
@@ -429,9 +420,10 @@
     }
 
     .focus-annotations {
-      right: 28px;
-      bottom: 28px;
-      width: min(420px, calc(100% - 56px));
+      right: 24px;
+      top: 84px;
+      bottom: auto;
+      width: min(360px, calc(100% - 88px));
       padding: 0;
       background: none;
       border: 0;
@@ -461,8 +453,8 @@
 
     .annotation-title {
       right: 0;
-      bottom: 110px;
-      width: min(340px, 100%);
+      top: 0;
+      width: min(320px, 100%);
       padding: 18px 18px 16px;
     }
 
@@ -492,9 +484,9 @@
     }
 
     .annotation-note {
-      left: 20px;
-      bottom: 36px;
-      width: min(280px, 72%);
+      left: 8px;
+      top: 192px;
+      width: min(260px, 72%);
       padding: 14px 16px;
       transform: rotate(-2deg);
     }
@@ -509,8 +501,8 @@
     }
 
     .annotation-stats {
-      right: 18px;
-      bottom: 6px;
+      right: 0;
+      top: 294px;
       display: flex;
       gap: 10px;
       padding: 12px;
@@ -817,47 +809,6 @@
       opacity: 0.9;
     }
 
-    .footer {
-      position: relative;
-      z-index: 8;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .pulse,
-    .orbital {
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: rgba(232, 225, 255, 0.72);
-      font-size: 12px;
-      backdrop-filter: blur(18px);
-    }
-
-    .pulse::before {
-      content: "";
-      display: inline-block;
-      width: 9px;
-      height: 9px;
-      margin-right: 10px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--cyan), var(--blue));
-      box-shadow: 0 0 14px rgba(93, 169, 233, 0.6);
-      animation: blink 2.2s ease-in-out infinite;
-      vertical-align: middle;
-    }
-
-    .footer-text {
-      text-align: center;
-      color: rgba(232, 225, 255, 0.54);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
     .dropline {
       z-index: 9;
       overflow: hidden;
@@ -1034,16 +985,12 @@
     }
 
     @media (max-width: 980px) {
-      .topbar {
-        grid-template-columns: 1fr;
-      }
-
       .runes {
-        justify-content: flex-start;
+        justify-content: flex-end;
       }
 
       .title-panel {
-        width: min(390px, calc(100% - 40px));
+        width: min(320px, calc(100% - 420px));
       }
     }
 
@@ -1060,24 +1007,17 @@
       .title-panel {
         left: 18px;
         top: 18px;
-        width: calc(100% - 36px);
+        bottom: auto;
+        width: min(280px, calc(100% - 106px));
         padding: 18px;
       }
 
       .focus-annotations {
-        left: 18px;
         right: 18px;
-        bottom: 18px;
-        width: auto;
-      }
-
-      .footer {
-        grid-template-columns: 1fr;
-        justify-items: start;
-      }
-
-      .footer-text {
-        text-align: left;
+        top: 78px;
+        left: auto;
+        bottom: auto;
+        width: min(300px, calc(100% - 56px));
       }
     }
 
@@ -1093,22 +1033,34 @@
         font-size: 24px;
       }
 
+      .title-panel {
+        width: calc(100% - 36px);
+        top: 18px;
+      }
+
       .title-panel h1 {
         font-size: 42px;
       }
 
-      .title-panel p,
+      .focus-annotations {
+        left: 18px;
+        right: 18px;
+        top: auto;
+        bottom: 120px;
+        width: auto;
+      }
+
       .annotation-title {
         position: relative;
         right: auto;
-        bottom: auto;
+        top: auto;
         width: auto;
       }
 
       .annotation-note {
         position: relative;
         left: auto;
-        bottom: auto;
+        top: auto;
         width: auto;
         margin-top: 10px;
         transform: none;
@@ -1117,7 +1069,7 @@
       .annotation-stats {
         position: relative;
         right: auto;
-        bottom: auto;
+        top: auto;
         margin-top: 10px;
         flex-wrap: wrap;
       }
@@ -1128,9 +1080,6 @@
         font-size: 12px;
       }
 
-      .chip {
-        min-width: calc(50% - 5px);
-      }
     }
   </style>
 </head>
@@ -1226,10 +1175,6 @@
         app.innerHTML = [
           '<main class="shell">',
           '  <header class="topbar">',
-          '    <div class="top-info">',
-          '      <div class="chip"><span>World State</span><strong id="focusStage">Wandering</strong></div>',
-          '      <div class="chip"><span>Dream Mood</span><strong id="focusMood">Choose a floating realm</strong></div>',
-          '    </div>',
           '    <div class="runes" id="runeBar" aria-label="Rule runes"></div>',
           '  </header>',
           '  <section class="hero">',
@@ -1273,11 +1218,6 @@
           '    <div class="enter-overlay"><div class="enter-text" id="enterText">Entering realm</div></div>',
           '    <div class="dropline" id="dropline"></div>',
           '  </section>',
-          '  <footer class="footer">',
-          '    <div class="pulse">Living dreamworld / floating islands / glowing words</div>',
-          '    <div class="footer-text">Click the islands inside the world, not a menu</div>',
-          '    <div class="orbital">3 realms / one continuous sky</div>',
-          '  </footer>',
           '</main>'
         ].join("");
 
@@ -1292,8 +1232,6 @@
         var focusNotes = document.getElementById("focusNotes");
         var focusBest = document.getElementById("focusBest");
         var focusFound = document.getElementById("focusFound");
-        var focusStage = document.getElementById("focusStage");
-        var focusMood = document.getElementById("focusMood");
         var pathHighlight = document.getElementById("pathHighlight");
         var dropline = document.getElementById("dropline");
         var hero = document.querySelector(".hero");
@@ -1457,8 +1395,6 @@
           root.style.setProperty("--map-rotate", "0deg");
           root.style.setProperty("--map-blur", "0px");
           root.style.setProperty("--enter-glow", "0");
-          focusStage.textContent = "Wandering";
-          focusMood.textContent = "Choose a floating realm";
           enterBtn.textContent = "Approach Realm";
           currentStage = currentStage % stageData.length;
           islands.forEach(function (island, i) {
@@ -1491,8 +1427,6 @@
           focusStageLabel.textContent = stage.stage;
           focusTitle.textContent = stage.title;
           focusDesc.textContent = stage.desc;
-          focusStage.textContent = stage.stage;
-          focusMood.textContent = stage.tags[0];
           focusWords.innerHTML = "";
           stage.recommended.forEach(function (tag) {
             var chip = document.createElement("span");
@@ -1527,8 +1461,6 @@
           root.style.setProperty("--map-rotate", "0deg");
           root.style.setProperty("--map-blur", "0.4px");
           root.style.setProperty("--enter-glow", "1");
-          focusStage.textContent = stage.stage + " / Entering";
-          focusMood.textContent = stage.title;
           enterText.textContent = "Entering " + stage.stage;
           islands.forEach(function (island, i) {
             island.classList.toggle("entering", i === index);
