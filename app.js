@@ -7,7 +7,7 @@
             id: 0,
             stage: "Stage 1",
             title: "\u6d6e\u6728\u4e4b\u68ee",
-            desc: "\u9752\u7eff\u8272\u68ee\u6797\u5c9b\u6d6e\u5728\u591c\u7a7a\u4e4b\u4e0a\uff0c\u82d4\u85d3\u6811\u6839\u3001\u53d1\u5149\u690d\u7269\u4e0e\u67d4\u8f6f\u8349\u5730\u5728\u547c\u5438\u95f4\u7f13\u7f13\u95ea\u70c1\u3002",
+            desc: "\u7eff\u5149\u68ee\u6797\u6f02\u6d6e\u5728\u591c\u8272\u6570\u636e\u6d77\u4e4b\u4e0a\uff0c\u6811\u6839\u50cf\u7f16\u8bd1\u4e2d\u7684\u7ebf\u7a0b\u5782\u5411\u865a\u7a7a\uff0c\u82d4\u85d3\u3001\u8349\u53f6\u4e0e\u8367\u5149\u690d\u7269\u5728\u547c\u5438\u95f4\u70b9\u4eae\u6574\u5ea7\u68a6\u5883\u68ee\u57df\u3002",
             tags: ["Verdant Dream", "Healing Glow", "Living Forest"],
             features: ["\u82d4\u85d3\u6728\u5f84", "\u8349\u53f6\u6446\u52a8", "\u8367\u5149\u690d\u7269"],
             recommended: ["\u8f7b", "\u706b", "\u5206"],
@@ -31,7 +31,7 @@
             id: 1,
             stage: "Stage 2",
             title: "\u5931\u91cd\u56de\u5eca",
-            desc: "\u84dd\u7d2b\u8272\u5931\u91cd\u6d6e\u754c\uff0c\u661f\u5c18\u3001\u6c34\u6676\u4e0e\u53cd\u91cd\u529b\u77f3\u5757\u5728\u7a7a\u4e2d\u76f8\u4e92\u62c9\u626f\u3002",
+            desc: "\u84dd\u7d2b\u8272\u5931\u91cd\u7a7a\u57df\u50cf\u4e00\u6761\u88ab\u6682\u505c\u7684\u8f68\u9053\u56de\u5eca\uff0c\u6676\u4f53\u3001\u6f02\u6d6e\u677f\u5757\u4e0e\u53cd\u91cd\u529b\u6b8b\u7247\u5728\u9759\u9ed8\u4e2d\u7f13\u7f13\u65cb\u8f6c\uff0c\u4eff\u4f5b\u6574\u4e2a\u4e16\u754c\u90fd\u88ab\u201c\u8f7b\u201d\u8fd9\u6761\u89c4\u5219\u91cd\u5199\u3002",
             tags: ["Crystal Drift", "Blue Void", "Zero Gravity"],
             features: ["\u91cd\u529b\u53cd\u8f6c", "\u6f02\u6d6e\u673a\u5173", "\u661f\u5c18\u8f68\u9053"],
             recommended: ["\u8f7b", "\u4e0a", "\u5206"],
@@ -55,7 +55,7 @@
             id: 2,
             stage: "Stage 3",
             title: "\u88c2\u9699\u4e4b\u5883",
-            desc: "\u7ea2\u6a59\u8272\u626d\u66f2\u5c9b\u5c7f\uff0c\u788e\u88c2\u5e73\u53f0\u4e0e\u53d1\u5149\u88c2\u7f1d\u628a\u7a7a\u95f4\u62c9\u6210\u4e0d\u7a33\u5b9a\u7684\u8bd7\u53e5\u3002",
+            desc: "\u7ea2\u6a59\u8272\u88c2\u5883\u50cf\u4e00\u6bb5\u6b63\u5728\u8fc7\u70ed\u5d29\u89e3\u7684\u89c4\u5219\u4ee3\u7801\uff0c\u65ad\u5c42\u5e73\u53f0\u3001\u71d5\u5149\u88c2\u7f1d\u4e0e\u7834\u788e\u6b8b\u7247\u628a\u7a7a\u95f4\u6495\u6210\u95ea\u70c1\u7684\u65ad\u53e5\uff0c\u6bcf\u4e00\u6b65\u90fd\u50cf\u8e29\u5728\u5d29\u575f\u7684\u8bed\u8a00\u8fb9\u7f18\u3002",
             tags: ["Ember Rift", "Broken Space", "Fire Script"],
             features: ["\u88c2\u9699\u8df3\u8f6c", "\u70ed\u6d6a\u6270\u52a8", "\u65ad\u5c42\u5e73\u53f0"],
             recommended: ["\u706b", "\u5206", "\u51b0"],
@@ -81,7 +81,13 @@
           { text: "\u706b", tone: "linear-gradient(135deg, #ff7d67, #ffb166)", glow: "rgba(255, 145, 93, 0.62)" },
           { text: "\u8f7b", tone: "linear-gradient(135deg, #59d9c2, #88f0d7)", glow: "rgba(89, 217, 194, 0.56)" },
           { text: "\u5206", tone: "linear-gradient(135deg, #8b6be8, #bf7bff)", glow: "rgba(165, 123, 255, 0.58)" },
-          { text: "\u51b0", tone: "linear-gradient(135deg, #5da9e9, #8dd8ff)", glow: "rgba(125, 205, 255, 0.56)" }
+          { text: "\u51b0", tone: "linear-gradient(135deg, #5da9e9, #8dd8ff)", glow: "rgba(125, 205, 255, 0.56)" },
+          { text: "\u6c34", tone: "linear-gradient(135deg, #4f9dff, #86d6ff)", glow: "rgba(115, 194, 255, 0.58)" },
+          { text: "\u96f7", tone: "linear-gradient(135deg, #8068ff, #b696ff)", glow: "rgba(150, 125, 255, 0.62)" },
+          { text: "\u75be", tone: "linear-gradient(135deg, #38d3a5, #88ffd7)", glow: "rgba(90, 236, 188, 0.58)" },
+          { text: "\u788e", tone: "linear-gradient(135deg, #ff9a6e, #ffd08e)", glow: "rgba(255, 176, 108, 0.58)" },
+          { text: "\u5f71", tone: "linear-gradient(135deg, #5f6a86, #9ea8c4)", glow: "rgba(176, 186, 226, 0.46)" },
+          { text: "\u5012", tone: "linear-gradient(135deg, #ff6f8f, #ffb5c0)", glow: "rgba(255, 145, 176, 0.54)" }
         ];
 
         app.innerHTML = [
@@ -89,18 +95,25 @@
           '  <header class="topbar">',
           '    <div class="title-panel">',
           '      <span class="eyebrow">Dream rules are written in words</span>',
-          '      <h1>&#35328;&#28789;</h1>',
+          '      <h1>&#35328;&#20986;&#27861;&#38543;</h1>',
           '    </div>',
           '    <div class="runes" id="runeBar" aria-label="Rule runes"></div>',
           '  </header>',
           '  <section class="hero">',
+          '    <div class="deep-space"></div>',
+          '    <div class="nebula-bands"></div>',
+          '    <div class="rule-field rule-field-back" id="ruleFieldBack"></div>',
           '    <div class="sky"></div>',
           '    <div class="clouds"></div>',
           '    <div class="mountains"></div>',
           '    <div class="glow-fog"></div>',
+          '    <div class="midspace-layer" id="midspaceLayer"></div>',
           '    <div class="particles" id="particles"></div>',
           '    <div class="fragments" id="fragments"></div>',
           '    <div class="energy-streams" id="energyStreams"></div>',
+          '    <div class="rule-field rule-field-mid" id="ruleFieldMid"></div>',
+          '    <div class="giant-glyphs" id="giantGlyphs"></div>',
+          '    <div class="quiet-core"></div>',
           '    <aside class="story-copy" aria-label="World introduction">',
           '      <p class="story-lead">在漂浮于梦境之上的规则世界里，文字不再只是语言，而是能够改写现实的力量。轻触「<span class="story-rune fire">火</span>」，沉寂的平台将被点燃；唤醒「<span class="story-rune light">轻</span>」，世界的重量会悄然褪去；释放「<span class="story-rune split">分</span>」，眼前的空间也将随之断裂重组。</p>',
           '      <p class="story-body">你将操控一颗蕴藏未知能量的小球，穿越风格迥异的漂浮岛屿，在跳跃、坠落与失衡之间摸索前路。组合文字，改写规则，找到通往终点的唯一轨迹。</p>',
@@ -127,6 +140,7 @@
           '      </div>',
           '    </aside>',
           '    <div class="enter-overlay"><div class="enter-text" id="enterText">Entering realm</div></div>',
+          '    <div class="foreground-drift" id="foregroundDrift"></div>',
           '    <div class="dropline" id="dropline"></div>',
           '  </section>',
           '</main>'
@@ -135,6 +149,10 @@
         var root = document.documentElement;
         var runeBar = document.getElementById("runeBar");
         var worldMap = document.getElementById("worldMap");
+        var ruleFieldBack = document.getElementById("ruleFieldBack");
+        var ruleFieldMid = document.getElementById("ruleFieldMid");
+        var giantGlyphs = document.getElementById("giantGlyphs");
+        var midspaceLayer = document.getElementById("midspaceLayer");
         var focusAnnotations = document.getElementById("focusAnnotations");
         var focusStageLabel = document.getElementById("focusStageLabel");
         var focusTitle = document.getElementById("focusTitle");
@@ -145,6 +163,8 @@
         var focusFound = document.getElementById("focusFound");
         var pathHighlight = document.getElementById("pathHighlight");
         var dropline = document.getElementById("dropline");
+        var energyStreams = document.getElementById("energyStreams");
+        var foregroundDrift = document.getElementById("foregroundDrift");
         var hero = document.querySelector(".hero");
         var enterText = document.getElementById("enterText");
         var currentStage = 0;
@@ -157,13 +177,24 @@
         setOverview();
 
         function buildRunes() {
+          var poses = [
+            { x: "-4px", y: "1px", r: "-6deg", dur: "6.4s" },
+            { x: "2px", y: "-4px", r: "4deg", dur: "5.8s" },
+            { x: "-1px", y: "3px", r: "-2deg", dur: "6.8s" },
+            { x: "5px", y: "-1px", r: "7deg", dur: "5.5s" }
+          ];
           runes.forEach(function (rune, index) {
             var button = document.createElement("button");
+            var pose = poses[index % poses.length];
             button.className = "rune";
             button.type = "button";
             button.textContent = rune.text;
             button.style.setProperty("--tone", rune.tone);
             button.style.setProperty("--glow", rune.glow);
+            button.style.setProperty("--jitter-x", pose.x);
+            button.style.setProperty("--jitter-y", pose.y);
+            button.style.setProperty("--rune-rot", pose.r);
+            button.style.setProperty("--bob-dur", pose.dur);
             button.setAttribute("aria-label", "Rune " + rune.text);
             button.addEventListener("click", function () {
               button.classList.remove("active");
@@ -176,8 +207,14 @@
         }
 
         function buildAmbient() {
+          fillRuleField(ruleFieldBack, "back");
+          fillRuleConstellations(ruleFieldMid);
+          fillGiantGlyphs(giantGlyphs);
+          fillMidspace(midspaceLayer);
           fillParticles(document.getElementById("particles"));
           fillFragments(document.getElementById("fragments"));
+          fillForegroundDrift(foregroundDrift);
+          drawEnergyStreams(energyStreams);
           drawPaths();
         }
 
@@ -233,19 +270,31 @@
             ].join("");
           } else if (stage.id === 1) {
             detail = [
-              '<span style="left:18%; top:28%; width:10%; height:18%; background:linear-gradient(180deg, #a1d5ff, #6fa7ff); clip-path:polygon(50% 0%, 100% 32%, 72% 100%, 18% 90%, 0% 38%); transform:rotate(-10deg);"></span>',
-              '<span style="left:64%; top:24%; width:12%; height:24%; background:linear-gradient(180deg, #c19cff, #7b79ff); clip-path:polygon(50% 0%, 100% 32%, 72% 100%, 18% 90%, 0% 38%); transform:rotate(10deg);"></span>',
-              '<span style="left:26%; top:58%; width:18%; height:8%; border-radius:18px; background:linear-gradient(135deg, #5da9e9, #8b6be8); transform:rotate(12deg);"></span>',
-              '<span style="left:54%; top:54%; width:20%; height:8%; border-radius:18px; background:linear-gradient(135deg, #8b6be8, #5da9e9); transform:rotate(-8deg);"></span>',
-              '<span style="left:42%; top:32%; width:16%; height:16%; border-radius:50%; border:1px solid rgba(255,255,255,0.28); box-shadow:0 0 16px rgba(125,205,255,0.24);"></span>'
+              '<span class="gravity-crystal gravity-crystal-a"></span>',
+              '<span class="gravity-crystal gravity-crystal-b"></span>',
+              '<span class="gravity-crystal gravity-crystal-c"></span>',
+              '<span class="gravity-slab gravity-slab-a"></span>',
+              '<span class="gravity-slab gravity-slab-b"></span>',
+              '<span class="gravity-slab gravity-slab-c"></span>',
+              '<span class="gravity-ring-core"></span>',
+              '<span class="gravity-orbit gravity-orbit-a"></span>',
+              '<span class="gravity-orbit gravity-orbit-b"></span>',
+              '<span class="gravity-shard gravity-shard-a"></span>',
+              '<span class="gravity-shard gravity-shard-b"></span>'
             ].join("");
           } else {
             detail = [
-              '<span style="left:16%; top:52%; width:22%; height:8%; border-radius:18px; background:linear-gradient(135deg, #ff8f62, #ffcf70); transform:rotate(-12deg);"></span>',
-              '<span style="left:52%; top:44%; width:22%; height:8%; border-radius:18px; background:linear-gradient(135deg, #ffb06f, #ff7f67); transform:rotate(10deg);"></span>',
-              '<span style="left:38%; top:20%; width:24%; height:36%; background:linear-gradient(180deg, rgba(255,208,133,0.76), rgba(255,127,103,0.28)); clip-path:polygon(48% 0%, 56% 0%, 62% 100%, 40% 100%); filter:blur(2px);"></span>',
-              '<span style="left:24%; top:26%; width:10%; height:10%; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,159,98,0.22) 68%, transparent 72%); box-shadow:0 0 16px rgba(255,159,98,0.48);"></span>',
-              '<span style="left:68%; top:24%; width:10%; height:10%; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,208,112,0.22) 68%, transparent 72%); box-shadow:0 0 16px rgba(255,208,112,0.48);"></span>'
+              '<span class="rift-plate rift-plate-a"></span>',
+              '<span class="rift-plate rift-plate-b"></span>',
+              '<span class="rift-plate rift-plate-c"></span>',
+              '<span class="rift-crack rift-crack-main"></span>',
+              '<span class="rift-crack rift-crack-side"></span>',
+              '<span class="rift-lava rift-lava-a"></span>',
+              '<span class="rift-lava rift-lava-b"></span>',
+              '<span class="rift-shard rift-shard-a"></span>',
+              '<span class="rift-shard rift-shard-b"></span>',
+              '<span class="rift-spark rift-spark-a"></span>',
+              '<span class="rift-spark rift-spark-b"></span>'
             ].join("");
           }
 
@@ -391,7 +440,8 @@
           }
 
           var orb = document.createElement("div");
-          orb.className = "orb-avatar";
+          orb.className = "orb-avatar orb-stage-" + String(stage.id);
+          orb.innerHTML = '<span class="orb-trail"></span><span class="orb-shell"><span class="orb-core"></span><span class="orb-ripple"></span></span>';
           orb.style.left = stage.id === 0 ? "56%" : (stage.id === 1 ? "28%" : "66%");
           orb.style.top = stage.id === 0 ? "28%" : (stage.id === 1 ? "56%" : "30%");
           islands[stage.id].appendChild(orb);
@@ -442,6 +492,31 @@
           ].join("");
         }
 
+        function drawEnergyStreams(container) {
+          container.innerHTML = [
+            '<svg viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">',
+            '  <defs>',
+            '    <linearGradient id="streamA" x1="0%" y1="0%" x2="100%" y2="0%">',
+            '      <stop offset="0%" stop-color="rgba(93,169,233,0)"></stop>',
+            '      <stop offset="35%" stop-color="rgba(93,169,233,0.2)"></stop>',
+            '      <stop offset="70%" stop-color="rgba(139,107,232,0.18)"></stop>',
+            '      <stop offset="100%" stop-color="rgba(139,107,232,0)"></stop>',
+            '    </linearGradient>',
+            '    <linearGradient id="streamB" x1="0%" y1="0%" x2="100%" y2="100%">',
+            '      <stop offset="0%" stop-color="rgba(255,158,109,0)"></stop>',
+            '      <stop offset="42%" stop-color="rgba(255,158,109,0.12)"></stop>',
+            '      <stop offset="76%" stop-color="rgba(193,156,255,0.18)"></stop>',
+            '      <stop offset="100%" stop-color="rgba(193,156,255,0)"></stop>',
+            '    </linearGradient>',
+            '  </defs>',
+            '  <path d="M-40 148 C120 104, 248 112, 376 170 S620 248, 790 204 S980 114, 1080 144" fill="none" stroke="url(#streamA)" stroke-width="2.6" stroke-linecap="round" opacity="0.64"></path>',
+            '  <path d="M-60 432 C120 402, 242 352, 358 368 S598 454, 760 432 S940 336, 1060 364" fill="none" stroke="url(#streamB)" stroke-width="2.2" stroke-linecap="round" opacity="0.52"></path>',
+            '  <path d="M120 96 C208 142, 320 136, 420 102" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3 11" opacity="0.54"></path>',
+            '  <path d="M620 520 C690 480, 760 470, 850 492" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3 12" opacity="0.42"></path>',
+            '</svg>'
+          ].join("");
+        }
+
         function spawnRune(rune, percentX) {
           var glyph = document.createElement("div");
           glyph.className = "falling-rune";
@@ -459,30 +534,233 @@
 
         function fillParticles(container) {
           for (var i = 0; i < 30; i += 1) {
+            var point = pickAmbientPoint();
             var p = document.createElement("span");
-            p.style.left = Math.random() * 100 + "%";
-            p.style.top = 16 + Math.random() * 64 + "%";
-            p.style.setProperty("--size", 3 + Math.random() * 5 + "px");
-            p.style.setProperty("--dur", 4 + Math.random() * 7 + "s");
-            p.style.setProperty("--dx", (-20 + Math.random() * 40) + "px");
-            p.style.setProperty("--dy", (-80 - Math.random() * 70) + "px");
-            p.style.setProperty("--glow", ["rgba(255,209,102,0.38)", "rgba(125,205,255,0.34)", "rgba(163,123,255,0.34)"][i % 3]);
+            p.style.left = point.x + "%";
+            p.style.top = point.y + "%";
+            p.style.setProperty("--size", 2 + Math.random() * 6 + "px");
+            p.style.setProperty("--dur", 5 + Math.random() * 9 + "s");
+            p.style.setProperty("--dx", (-28 + Math.random() * 56) + "px");
+            p.style.setProperty("--dy", (-90 - Math.random() * 90) + "px");
+            p.style.setProperty("--glow", ["rgba(255,209,102,0.28)", "rgba(125,205,255,0.26)", "rgba(163,123,255,0.28)", "rgba(255,182,222,0.18)"][i % 4]);
             container.appendChild(p);
           }
         }
 
-        function fillFragments(container) {
-          var chars = ["\u706b", "\u8f7b", "\u5206", "\u51b0", "\u68a6", "\u5149", "\u5f71", "\u98ce"];
-          for (var i = 0; i < chars.length; i += 1) {
+        function fillRuleField(container, layerName) {
+          var glyphs = [
+            { text: "\u706b", tone: "rift", effect: "fire" },
+            { text: "\u8f7b", tone: "gravity", effect: "rise" },
+            { text: "\u98ce", tone: "forest", effect: "wind" },
+            { text: "\u4e0a", tone: "gravity", effect: "rise" },
+            { text: "\u5206", tone: "rift", effect: "split" },
+            { text: "\u51b0", tone: "gravity", effect: "ice" },
+            { text: "\u843d", tone: "rift", effect: "fall" },
+            { text: "\u6d6e", tone: "gravity", effect: "rise" },
+            { text: "\u88c2", tone: "rift", effect: "crack" },
+            { text: "\u68ee", tone: "forest", effect: "glow" },
+            { text: "\u751f", tone: "forest", effect: "glow" },
+            { text: "\u6728", tone: "forest", effect: "wind" },
+            { text: "\u5149", tone: "forest", effect: "glow" },
+            { text: "\u7a7a", tone: "gravity", effect: "rotate" }
+          ];
+          var count = layerName === "back" ? 18 : 9;
+          for (var i = 0; i < count; i += 1) {
+            var data = glyphs[i % glyphs.length];
+            var point = pickAmbientPoint();
             var g = document.createElement("span");
-            g.textContent = chars[i];
-            g.style.left = 10 + i * 10 + "%";
-            g.style.top = 12 + (i % 4) * 16 + "%";
-            g.style.setProperty("--size", 18 + (i % 3) * 10 + "px");
-            g.style.setProperty("--dur", 6 + i * 0.7 + "s");
-            g.style.setProperty("--glow", ["rgba(255,158,109,0.2)", "rgba(93,169,233,0.2)", "rgba(139,107,232,0.22)"][i % 3]);
+            var depth = layerName === "back"
+              ? [ "depth-far", "depth-mid", "depth-ghost" ][i % 3]
+              : [ "depth-mid", "depth-near", "depth-ghost" ][i % 3];
+            var variant = [ "variant-glow", "variant-ink", "variant-broken", "variant-soft" ][i % 4];
+            g.className = "rule-glyph tone-" + data.tone + " effect-" + data.effect + " " + depth + " " + variant;
+            g.textContent = data.text;
+            g.style.left = point.x + "%";
+            g.style.top = point.y + "%";
+            g.style.setProperty("--size", (layerName === "back" ? 24 : 34) + Math.random() * (layerName === "back" ? 34 : 24) + "px");
+            g.style.setProperty("--dur", 12 + Math.random() * 16 + "s");
+            g.style.setProperty("--dx", (-30 + Math.random() * 60) + "px");
+            g.style.setProperty("--dy", (-34 + Math.random() * 68) + "px");
+            g.style.setProperty("--rot", (-18 + Math.random() * 36) + "deg");
+            g.style.setProperty("--opacity", String(layerName === "back" ? 0.16 + Math.random() * 0.18 : 0.14 + Math.random() * 0.16));
+            g.style.animationDelay = (-Math.random() * 10) + "s";
             container.appendChild(g);
           }
+        }
+
+        function fillGiantGlyphs(container) {
+          [
+            { text: "\u8f7b", tone: "gravity", x: "74%", y: "10%", size: "220px", dur: "42s", rot: "8deg" },
+            { text: "\u68a6", tone: "gravity", x: "10%", y: "54%", size: "260px", dur: "50s", rot: "-10deg" },
+            { text: "\u88c2", tone: "rift", x: "80%", y: "58%", size: "190px", dur: "38s", rot: "12deg" }
+          ].forEach(function (item, index) {
+            var glyph = document.createElement("span");
+            glyph.className = "giant-glyph tone-" + item.tone;
+            glyph.textContent = item.text;
+            glyph.style.left = item.x;
+            glyph.style.top = item.y;
+            glyph.style.setProperty("--size", item.size);
+            glyph.style.setProperty("--dur", item.dur);
+            glyph.style.setProperty("--rot", item.rot);
+            glyph.style.animationDelay = (-index * 7) + "s";
+            container.appendChild(glyph);
+          });
+        }
+
+        function fillRuleConstellations(container) {
+          var zoneWords = [
+            {
+              tone: "forest",
+              items: [
+                { text: "\u6728", effect: "wind", x: 12, y: 24, size: 34 },
+                { text: "\u751f", effect: "glow", x: 20, y: 36, size: 26 },
+                { text: "\u98ce", effect: "wind", x: 30, y: 22, size: 30 },
+                { text: "\u68ee", effect: "glow", x: 24, y: 52, size: 30 },
+                { text: "\u5149", effect: "glow", x: 36, y: 34, size: 24 }
+              ]
+            },
+            {
+              tone: "gravity",
+              items: [
+                { text: "\u8f7b", effect: "rise", x: 66, y: 18, size: 34 },
+                { text: "\u6d6e", effect: "rise", x: 74, y: 34, size: 28 },
+                { text: "\u4e0a", effect: "rotate", x: 80, y: 22, size: 26 },
+                { text: "\u7a7a", effect: "rotate", x: 58, y: 32, size: 24 },
+                { text: "\u8f6c", effect: "rotate", x: 70, y: 48, size: 22 }
+              ]
+            },
+            {
+              tone: "rift",
+              items: [
+                { text: "\u88c2", effect: "crack", x: 30, y: 66, size: 34 },
+                { text: "\u706b", effect: "fire", x: 44, y: 58, size: 28 },
+                { text: "\u5d29", effect: "crack", x: 56, y: 68, size: 24 },
+                { text: "\u843d", effect: "fall", x: 62, y: 54, size: 26 },
+                { text: "\u65ad", effect: "split", x: 48, y: 76, size: 22 }
+              ]
+            }
+          ];
+          zoneWords.forEach(function (zone, zoneIndex) {
+            zone.items.forEach(function (item, itemIndex) {
+              var g = document.createElement("span");
+              g.className = "rule-glyph constellation tone-" + zone.tone + " effect-" + item.effect + " " + [ "depth-mid", "depth-near", "depth-ghost" ][itemIndex % 3];
+              g.textContent = item.text;
+              g.style.left = item.x + "%";
+              g.style.top = item.y + "%";
+              g.style.setProperty("--size", item.size + "px");
+              g.style.setProperty("--dur", 10 + itemIndex * 2.2 + zoneIndex * 1.4 + "s");
+              g.style.setProperty("--dx", (-14 + itemIndex * 8) + "px");
+              g.style.setProperty("--dy", (-12 + zoneIndex * 8 + itemIndex * 4) + "px");
+              g.style.setProperty("--rot", (-10 + itemIndex * 8) + "deg");
+              g.style.setProperty("--opacity", String(0.18 + (itemIndex % 3) * 0.05));
+              g.style.animationDelay = (-itemIndex * 1.6) + "s";
+              container.appendChild(g);
+            });
+          });
+        }
+
+        function fillFragments(container) {
+          var chars = ["\u706b", "\u8f7b", "\u5206", "\u51b0", "\u68a6", "\u5149", "\u5f71", "\u98ce", "\u88c2", "\u6d6e", "\u843d", "\u751f"];
+          for (var i = 0; i < 12; i += 1) {
+            var point = pickAmbientPoint();
+            var g = document.createElement("span");
+            g.className = "fragment-glyph";
+            g.textContent = chars[i % chars.length];
+            g.style.left = point.x + "%";
+            g.style.top = point.y + "%";
+            g.style.setProperty("--size", 18 + Math.random() * 20 + "px");
+            g.style.setProperty("--dur", 9 + Math.random() * 10 + "s");
+            g.style.setProperty("--glow", ["rgba(255,158,109,0.16)", "rgba(93,169,233,0.18)", "rgba(139,107,232,0.2)", "rgba(95,191,119,0.18)"][i % 4]);
+            g.style.setProperty("--rot", (-16 + Math.random() * 32) + "deg");
+            g.style.setProperty("--dx", (-22 + Math.random() * 44) + "px");
+            g.style.setProperty("--dy", (-28 + Math.random() * 56) + "px");
+            g.style.opacity = String(0.12 + Math.random() * 0.18);
+            g.style.animationDelay = (-Math.random() * 8) + "s";
+            container.appendChild(g);
+          }
+        }
+
+        function fillMidspace(container) {
+          for (var i = 0; i < 10; i += 1) {
+            var ringPoint = pickAmbientPoint();
+            var ring = document.createElement("span");
+            ring.className = "mid-ring";
+            ring.style.left = ringPoint.x + "%";
+            ring.style.top = ringPoint.y + "%";
+            ring.style.setProperty("--size", 26 + Math.random() * 68 + "px");
+            ring.style.setProperty("--dur", 14 + Math.random() * 12 + "s");
+            ring.style.animationDelay = (-Math.random() * 12) + "s";
+            container.appendChild(ring);
+          }
+
+          for (var j = 0; j < 12; j += 1) {
+            var shardPoint = pickAmbientPoint();
+            var shard = document.createElement("span");
+            shard.className = "mid-shard";
+            shard.style.left = shardPoint.x + "%";
+            shard.style.top = shardPoint.y + "%";
+            shard.style.setProperty("--size", 8 + Math.random() * 18 + "px");
+            shard.style.setProperty("--dur", 12 + Math.random() * 14 + "s");
+            shard.style.setProperty("--rot", (-22 + Math.random() * 44) + "deg");
+            shard.style.animationDelay = (-Math.random() * 10) + "s";
+            container.appendChild(shard);
+          }
+
+          for (var k = 0; k < 6; k += 1) {
+            var tracePoint = pickAmbientPoint();
+            var trace = document.createElement("span");
+            trace.className = "mid-trace";
+            trace.style.left = tracePoint.x + "%";
+            trace.style.top = tracePoint.y + "%";
+            trace.style.setProperty("--w", 50 + Math.random() * 120 + "px");
+            trace.style.setProperty("--dur", 16 + Math.random() * 12 + "s");
+            trace.style.setProperty("--rot", (-30 + Math.random() * 60) + "deg");
+            trace.style.animationDelay = (-Math.random() * 14) + "s";
+            container.appendChild(trace);
+          }
+        }
+
+        function fillForegroundDrift(container) {
+          var chars = ["\u706b", "\u98ce", "\u88c2", "\u6d6e", "\u8f7b", "\u5149"];
+          for (var i = 0; i < 5; i += 1) {
+            var glyph = document.createElement("span");
+            glyph.className = "drift-glyph";
+            glyph.textContent = chars[i % chars.length];
+            glyph.style.left = (4 + Math.random() * 92) + "%";
+            glyph.style.top = (6 + Math.random() * 86) + "%";
+            glyph.style.setProperty("--size", 20 + Math.random() * 28 + "px");
+            glyph.style.setProperty("--dur", 18 + Math.random() * 14 + "s");
+            glyph.style.setProperty("--dx", (-24 + Math.random() * 48) + "px");
+            glyph.style.setProperty("--dy", (-40 + Math.random() * 60) + "px");
+            glyph.style.animationDelay = (-Math.random() * 12) + "s";
+            container.appendChild(glyph);
+          }
+
+          for (var j = 0; j < 12; j += 1) {
+            var mote = document.createElement("span");
+            mote.className = j % 3 === 0 ? "drift-paper" : "drift-mote";
+            mote.style.left = (2 + Math.random() * 96) + "%";
+            mote.style.top = (4 + Math.random() * 90) + "%";
+            mote.style.setProperty("--size", 5 + Math.random() * 16 + "px");
+            mote.style.setProperty("--dur", 14 + Math.random() * 16 + "s");
+            mote.style.setProperty("--dx", (-18 + Math.random() * 36) + "px");
+            mote.style.setProperty("--dy", (-36 + Math.random() * 58) + "px");
+            mote.style.setProperty("--rot", (-28 + Math.random() * 56) + "deg");
+            mote.style.animationDelay = (-Math.random() * 14) + "s";
+            container.appendChild(mote);
+          }
+        }
+
+        function pickAmbientPoint() {
+          var x = 0;
+          var y = 0;
+          var tries = 0;
+          do {
+            x = 4 + Math.random() * 92;
+            y = 8 + Math.random() * 80;
+            tries += 1;
+          } while (tries < 10 && x > 34 && x < 66 && y > 20 && y < 74);
+          return { x: x, y: y };
         }
 
         window.setInterval(function () {
