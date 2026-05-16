@@ -1026,6 +1026,9 @@
   shatterChip.addEventListener("click", castShatter);
   memoryChip.addEventListener("click", castMemory);
   flashChip.addEventListener("click", castFlashlight);
+  canvas.addEventListener("pointerdown", function () {
+    canvas.focus();
+  });
   window.addEventListener("resize", resizeCanvas);
   window.addEventListener("keydown", handleKeydown);
 
@@ -1037,6 +1040,7 @@
   }
 
   resizeCanvas();
+  canvas.focus();
   refreshContextHint();
   updateObjective();
   window.requestAnimationFrame(loop);

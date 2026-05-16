@@ -52,6 +52,10 @@ body {
   display: block;
 }
 
+#stageCanvas:focus {
+  outline: none;
+}
+
 .hud {
   position: fixed;
   z-index: 3;
