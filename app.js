@@ -2,11 +2,14 @@
       try {
         var app = document.getElementById("app");
 
+        var STAGE1_LEADERBOARD_KEY = "yanling-stage1-honor-board";
+        var HOME_FOCUS_STAGE_KEY = "yanling-home-focus-stage";
+
         var stageData = [
           {
             id: 0,
             stage: "Stage 1",
-            title: "\u6d6e\u6728\u4e4b\u68ee",
+            title: "\u6797\u95f4",
             desc: "\u7eff\u5149\u68ee\u6797\u6f02\u6d6e\u5728\u591c\u8272\u6570\u636e\u6d77\u4e4b\u4e0a\uff0c\u6811\u6839\u50cf\u7f16\u8bd1\u4e2d\u7684\u7ebf\u7a0b\u5782\u5411\u865a\u7a7a\uff0c\u82d4\u85d3\u3001\u8349\u53f6\u4e0e\u8367\u5149\u690d\u7269\u5728\u547c\u5438\u95f4\u70b9\u4eae\u6574\u5ea7\u68a6\u5883\u68ee\u57df\u3002",
             tags: ["Verdant Dream", "Healing Glow", "Living Forest"],
             features: ["\u82d4\u85d3\u6728\u5f84", "\u8349\u53f6\u6446\u52a8", "\u8367\u5149\u690d\u7269"],
@@ -171,10 +174,54 @@
         var interactionState = "overview";
         var islands = [];
 
+        stageData[0].best = getStage1BestRecord();
+
         buildRunes();
         buildAmbient();
         buildWorld();
         setOverview();
+        applyQueuedStageFocus();
+
+        function getStage1BestRecord() {
+          try {
+            var raw = window.localStorage.getItem(STAGE1_LEADERBOARD_KEY);
+            var parsed = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(parsed) || !parsed.length) {
+              return "--:--";
+            }
+            parsed.sort(function (a, b) {
+              if (a.time !== b.time) {
+                return a.time - b.time;
+              }
+              return (a.createdAt || 0) - (b.createdAt || 0);
+            });
+            return formatBestTime(parsed[0].time);
+          } catch (error) {
+            return "--:--";
+          }
+        }
+
+        function formatBestTime(seconds) {
+          var safe = Math.max(0, Number(seconds) || 0);
+          var minutes = Math.floor(safe / 60);
+          var remain = safe - minutes * 60;
+          var secs = Math.floor(remain);
+          var centis = Math.floor((remain - secs) * 100);
+          return String(minutes).padStart(2, "0") + ":" + String(secs).padStart(2, "0") + "." + String(centis).padStart(2, "0");
+        }
+
+        function applyQueuedStageFocus() {
+          var raw = window.sessionStorage.getItem(HOME_FOCUS_STAGE_KEY);
+          if (raw === null) {
+            return;
+          }
+          window.sessionStorage.removeItem(HOME_FOCUS_STAGE_KEY);
+          var index = Number(raw);
+          if (!Number.isFinite(index) || index < 0 || index >= stageData.length) {
+            return;
+          }
+          focusIsland(index);
+        }
 
         function buildRunes() {
           var poses = [

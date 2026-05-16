@@ -3,57 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>言出法随 | Stage 1 林间</title>
-  <link rel="stylesheet" href="./stage1.css" />
+  <title>言出法随 | Stage 2 失重回廊</title>
+  <link rel="stylesheet" href="./stage2.css" />
 </head>
 <body>
   <main class="stage-shell">
-    <canvas id="stageCanvas" aria-label="Stage 1 林间" tabindex="0"></canvas>
+    <canvas id="stageCanvas" aria-label="Stage 2 失重回廊" tabindex="0"></canvas>
 
     <section class="hud hud-left">
-      <div class="eyebrow">Stage 1 Dream Forest</div>
-      <h1>林间</h1>
+      <div class="eyebrow">Stage 2 Zero Gravity Corridor</div>
+      <h1>失重回廊</h1>
       <div class="status-grid">
         <div class="status-card objective-card">
           <small>当前目标</small>
-          <strong id="objectiveText">先完成基础规则学习，再穿过冰面与阴影机关，到达终点祭坛。</strong>
+          <strong id="objectiveText">沿旋塔外缘依次通过光段与影段，在中立终台触碰「明」字。</strong>
         </div>
         <div class="status-card hint-card">
           <small>场景提示</small>
-          <strong id="hintText">WASD / 方向键按屏幕方向移动；按 1 使用【碎】，按 2 使用【忆】，按 3 使用【火】，按 F 用手电照亮高墙。</strong>
+          <strong id="hintText">WASD / 方向键按屏幕方向移动；按 1【碎】、2【忆】、3【火】、4【冰】、F【影】、E【透】。</strong>
         </div>
       </div>
       <div class="ability-bar">
         <button class="ability-chip" id="shatterChip" type="button" aria-pressed="false">
           <span>1</span>
           <strong>碎</strong>
-          <small>破坏矮墙</small>
+          <small>击碎矮墙</small>
         </button>
         <button class="ability-chip" id="memoryChip" type="button" aria-pressed="false">
           <span>2</span>
           <strong>忆</strong>
-          <small>恢复空洞</small>
+          <small>恢复透明地面</small>
         </button>
         <button class="ability-chip" id="fireChip" type="button" aria-pressed="false">
           <span>3</span>
           <strong>火</strong>
           <small>烧掉冰面</small>
         </button>
+        <button class="ability-chip" id="freezeChip" type="button" aria-pressed="false">
+          <span>4</span>
+          <strong>冰</strong>
+          <small>冻结水面</small>
+        </button>
         <button class="ability-chip" id="flashChip" type="button" aria-pressed="false">
           <span>F</span>
-          <strong>手电</strong>
-          <small>制造阴影路径</small>
+          <strong>影</strong>
+          <small>照出阴影路径</small>
+        </button>
+        <button class="ability-chip" id="pierceChip" type="button" aria-pressed="false">
+          <span>E</span>
+          <strong>透</strong>
+          <small>照出临时通路</small>
         </button>
       </div>
       <div class="meta-panel">
         <small>操作说明</small>
         <ul>
-          <li>移动：WASD / 方向键，按屏幕方向走</li>
-          <li>靠近目标即可使用规则</li>
-          <li>装置提示会在附近直接出现</li>
-          <li>冰面若前方无遮挡，会一直冲到掉下去</li>
-          <li>走出地图边缘会直接掉落</li>
-          <li>手电制造的阴影路径会短暂存在</li>
+          <li>移动：WASD / 方向键</li>
+          <li>本关沿用第一关的 2.5D 菱形地图形式</li>
+          <li>靠近机关后再用技能，阴影路和透路都只持续 4 秒</li>
+          <li>最终平台始终稳定，触碰中央「明」字即可通关</li>
         </ul>
       </div>
     </section>
@@ -62,18 +70,23 @@
       <div class="meta-panel">
         <small>规则障碍</small>
         <ul>
-          <li>矮墙：低高度方块，可用【碎】破坏</li>
-          <li>高墙：无法直接通过，可被手电照射生成临时阴影路径</li>
-          <li>空洞：走入会掉落，可用【忆】恢复</li>
-          <li>冰面：踏上去会沿当前方向冲刺，可用【火】烧掉</li>
+          <li>光段 / 影段：只在对应窗口或中线中立带内稳定</li>
+          <li>矮墙：靠近后用【碎】击碎</li>
+          <li>透明地面：靠近后用【忆】短暂恢复</li>
+          <li>冰面：靠近后用【火】烧掉</li>
+          <li>水面：透明蓝水面，必须先用【冰】冻结</li>
+          <li>高墙：按 F 照出阴影桥，按 E 照出临时通路</li>
         </ul>
       </div>
       <div class="meta-panel">
         <small>进度记录</small>
         <ul id="progressList">
-          <li>矮墙已破坏：0 / 2</li>
-          <li>冰面已烧融：0 / 1</li>
+          <li>矮墙已击碎：0 / 1</li>
+          <li>透明地面已恢复：0 / 1</li>
+          <li>冰面已烧掉：0 / 1</li>
+          <li>水面已冻结：0 / 1</li>
           <li>阴影路径已触发：0 / 1</li>
+          <li>透壁路径已显现：0 / 1</li>
         </ul>
       </div>
       <div class="meta-panel">
@@ -96,42 +109,53 @@
     </section>
 
     <div class="toast" id="toast"></div>
+
     <section class="start-modal is-visible" id="startModal" aria-hidden="false">
       <div class="start-card">
-        <small>Stage 1 Entry</small>
-        <h2>输入名字后开始试炼</h2>
-        <p>先登记你的名字，再进入林间。计时会在正式开始后才启动。</p>
+        <small>Stage 2 Entry</small>
+        <h2>输入名字后进入失重回廊</h2>
+        <p>第二关改回第一关同款 2.5D 菱形地图。先输入名字，再进入由阴影桥、透路、水面与透明地面组成的新试炼。</p>
         <label class="player-label" for="startNameInput">玩家名</label>
         <input class="player-input start-input" id="startNameInput" type="text" maxlength="16" placeholder="请输入玩家名" />
         <div class="start-abilities">
           <div class="start-ability">
             <span>1</span>
             <strong>碎</strong>
-            <small>破坏矮墙</small>
+            <small>击碎矮墙</small>
           </div>
           <div class="start-ability">
             <span>2</span>
             <strong>忆</strong>
-            <small>临时恢复空洞</small>
+            <small>恢复透明地面</small>
           </div>
           <div class="start-ability">
             <span>3</span>
             <strong>火</strong>
-            <small>烧融冰面</small>
+            <small>烧掉冰面</small>
+          </div>
+          <div class="start-ability">
+            <span>4</span>
+            <strong>冰</strong>
+            <small>冻结水面</small>
           </div>
           <div class="start-ability">
             <span>F</span>
-            <strong>手电</strong>
-            <small>照出阴影路径</small>
+            <strong>影</strong>
+            <small>照出 4 秒阴影路径</small>
+          </div>
+          <div class="start-ability">
+            <span>E</span>
+            <strong>透</strong>
+            <small>照出 4 秒临时通路</small>
           </div>
         </div>
         <div class="start-help">
           <small>操作说明</small>
           <ul>
             <li>移动：WASD / 方向键，按屏幕方向走</li>
-            <li>靠近目标即可使用规则</li>
-            <li>冰面若前方无遮挡，会一直冲到掉下去</li>
-            <li>走出地图边缘会直接掉落</li>
+            <li>靠近障碍后再用技能，阴影路与透路会在 4 秒后消失</li>
+            <li>透明蓝水面必须先冻结，否则踏上去就会坠落</li>
+            <li>最终平台中央的「明」字是本关终点</li>
           </ul>
         </div>
         <p class="start-error" id="startError"></p>
@@ -140,10 +164,11 @@
         </div>
       </div>
     </section>
+
     <section class="victory-modal" id="victoryModal" aria-hidden="true">
       <div class="victory-card">
         <small>Stage Clear</small>
-        <h2>林间通关</h2>
+        <h2>失重回廊通关</h2>
         <p id="finalTimeText">本次用时：00:00.00</p>
         <p id="rankText">当前排名：第 1 名</p>
         <ol class="honor-list honor-list-large" id="modalHonorList">
@@ -157,6 +182,6 @@
     </section>
   </main>
 
-  <script src="./stage1.js"></script>
+  <script src="./stage2.js"></script>
 </body>
 </html>

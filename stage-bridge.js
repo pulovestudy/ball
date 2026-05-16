@@ -2,15 +2,34 @@
   var navigated = false;
   var pollId = 0;
   var pendingTimer = 0;
+  var STAGE_ROUTES = {
+    0: { entry: "home-stage-1", file: "./stage1.html", label: "Stage 1" },
+    1: { entry: "home-stage-2", file: "./stage2.html", label: "Stage 2" }
+  };
 
-  function queueNavigation() {
+  function getRouteByIndex(index) {
+    return STAGE_ROUTES[index] || null;
+  }
+
+  function getRouteByEnterText(text) {
+    var match = /Stage\s+(\d+)/i.exec(text || "");
+    if (!match) {
+      return null;
+    }
+    return getRouteByIndex(Number(match[1]) - 1);
+  }
+
+  function queueNavigation(route) {
     if (navigated) {
       return;
     }
+    if (!route) {
+      return;
+    }
     navigated = true;
-    window.sessionStorage.setItem("yanling-stage-entry", "home-stage-1");
+    window.sessionStorage.setItem("yanling-stage-entry", route.entry);
     pendingTimer = window.setTimeout(function () {
-      window.location.href = "./stage1.html";
+      window.location.href = route.file;
     }, 1180);
   }
 
@@ -30,23 +49,29 @@
       return;
     }
 
-    if (!/Stage 1/.test(enterText.textContent || "")) {
+    var route = getRouteByEnterText(enterText.textContent || "");
+    if (!route) {
       return;
     }
 
-    queueNavigation();
+    queueNavigation(route);
   }
 
   document.addEventListener("click", function (event) {
     if (navigated) {
       return;
     }
-    var island = event.target && event.target.closest ? event.target.closest(".island-stage-0") : null;
+    var island = event.target && event.target.closest ? event.target.closest(".island") : null;
     if (!island) {
       return;
     }
+    var match = /island-stage-(\d+)/.exec(island.className || "");
+    var route = match ? getRouteByIndex(Number(match[1])) : null;
+    if (!route) {
+      return;
+    }
     if (island.classList.contains("focused")) {
-      queueNavigation();
+      queueNavigation(route);
     }
   }, true);
 
